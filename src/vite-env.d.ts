@@ -20,6 +20,12 @@ declare module '../config/categories.json' {
     filterFilename?: string;
     /** Description API path for fetching section descriptions */
     descriptionApiPath?: string;
+    /** Optional display name for this data source (Thai) */
+    nameTh?: string;
+    /** Optional display name for this data source (English) */
+    nameEn?: string;
+    /** Optional section prefix override (e.g., "ข้อ" instead of "มาตรา") */
+    sectionPrefix?: string;
   }
 
   export interface CategoryConfig {

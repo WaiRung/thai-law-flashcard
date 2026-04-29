@@ -500,7 +500,9 @@ export async function fetchCategoryById(
         // Tag each question with its data source index if this category has multiple data sources
         const hasMultipleDataSources = filenames.length > 1;
         // Resolve the sectionPrefix for this data source (if configured)
-        const dataSourceConfig = categoryConfig?.dataSources?.[dataSourceIndex];
+        const dataSourceConfig = categoryConfig?.dataSources?.[dataSourceIndex] as
+          | { sectionPrefix?: string }
+          | undefined;
         const sectionPrefix = dataSourceConfig?.sectionPrefix;
         const questionsWithDataSourceIndex = hasMultipleDataSources
           ? questions.map(q => ({ ...q, dataSourceIndex, ...(sectionPrefix && { sectionPrefix }) }))
