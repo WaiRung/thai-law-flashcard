@@ -14,7 +14,7 @@
     },
     {
       "id": "กฎหมายมรดก",
-      "enabled": false,
+      "enabled": true,
       "nameTh": "กฎหมายมรดก",
       "nameEn": "Succession Law",
       "path": "succession_law",
@@ -22,18 +22,6 @@
       "apiFilename": "civil_and_commercial_code",
       "filterFilename": "civil/succession.json",
       "descriptionApiPath": "civil_and_commercial_code",
-      "questions": []
-    },
-    {
-      "id": "กฎหมายวิธีพิจารณาความแพ่ง 2",
-      "enabled": false,
-      "nameTh": "กฎหมายวิธีพิจารณาความแพ่ง 2",
-      "nameEn": "Civil Procedure Code 2",
-      "path": "civil_procedure_code_2",
-      "icon": "📋",
-      "apiFilename": "civil_procedure_code",
-      "filterFilename": "civil_procedure/civil_procedure_2.json",
-      "descriptionApiPath": "civil_procedure_code",
       "questions": []
     },
     {
