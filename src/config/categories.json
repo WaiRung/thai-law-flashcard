@@ -25,6 +25,18 @@
       "questions": []
     },
     {
+      "id": "กฎหมายล้มละลาย",
+      "enabled": true,
+      "nameTh": "กฎหมายล้มละลาย",
+      "nameEn": "Bankruptcy Law",
+      "path": "bankruptcy_law",
+      "icon": "💸",
+      "apiFilename":"bankruptcy_act",
+      "filterFilename": "bankruptcy_act/bankruptcy.json",
+      "descriptionApiPath": "bankruptcy_act",
+      "questions": []
+    },
+    {
       "id": "กฎหมายสถาบันการเงิน",
       "enabled": false,
       "nameTh": "กฎหมายสถาบันการเงิน",
