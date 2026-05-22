@@ -2,7 +2,7 @@
   "categories": [
     {
       "id": "พระธรรมนูญศาลยุติธรรม",
-      "enabled": true,
+      "enabled": false,
       "nameTh": "พระธรรมนูญศาลยุติธรรม",
       "nameEn": "Law for the Organization of the Court of Justice",
       "path": "law_for_the_org_of_the_court_of_justice",
