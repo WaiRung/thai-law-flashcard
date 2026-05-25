@@ -26,7 +26,7 @@
     },
     {
       "id": "กฎหมายล้มละลาย",
-      "enabled": true,
+      "enabled": false,
       "nameTh": "กฎหมายล้มละลาย",
       "nameEn": "Bankruptcy Law",
       "path": "bankruptcy_law",
