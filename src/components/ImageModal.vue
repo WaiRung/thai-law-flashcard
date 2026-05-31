@@ -9,11 +9,22 @@
                 <h2 class="image-title">{{ title }}</h2>
                 <p v-if="subtitle" class="image-subtitle">{{ subtitle }}</p>
               </div>
-              <button class="close-button" @click="handleClose" aria-label="Close">
+              <button class="close-button" @click="handleClose" aria-label="ปิดหน้าต่างภาพเต็มจอ / Close fullscreen image">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <line x1="18" y1="6" x2="6" y2="18"></line>
                   <line x1="6" y1="6" x2="18" y2="18"></line>
                 </svg>
+              </button>
+            </div>
+            <div class="modal-toolbar">
+              <p class="modal-hint">แตะค้างแล้วลากเพื่อเลื่อนเมื่อขยายแล้ว ใช้สองนิ้วเพื่อซูม</p>
+              <button
+                v-if="scale > MIN_SCALE"
+                type="button"
+                class="toolbar-button"
+                @click="resetTransform"
+              >
+                รีเซ็ตมุมมอง
               </button>
             </div>
             <div class="modal-body">
@@ -21,7 +32,14 @@
                 <div class="spinner"></div>
                 <p class="loading-text">กำลังโหลดภาพขนาดเต็ม...</p>
               </div>
+              <div v-else-if="imageError" class="modal-error" role="alert">
+                <p class="error-title">ไม่สามารถแสดงภาพขนาดเต็มได้</p>
+                <p class="error-text">{{ imageError }}</p>
+                <button type="button" class="toolbar-button" @click="retryImageLoad">ลองโหลดอีกครั้ง</button>
+              </div>
               <img 
+                v-else
+                :key="imageRenderKey"
                 ref="imageElement"
                 :src="imageUrl" 
                 :alt="title" 
@@ -64,6 +82,8 @@ const MIN_SCALE = 1;
 const MAX_SCALE = 5;
 
 const isImageLoading = ref(true);
+const imageError = ref("");
+const imageRenderKey = ref(0);
 const imageElement = ref<HTMLImageElement | null>(null);
 
 // Touch and zoom state
@@ -96,15 +116,24 @@ const handleImageLoad = async (event: Event) => {
     // Add a small delay to prevent spinner flash
     await new Promise(resolve => setTimeout(resolve, MODAL_SPINNER_MIN_DISPLAY_TIME));
     
+    imageError.value = "";
     isImageLoading.value = false;
   } catch (error) {
     console.error('Image decode error:', error);
+    imageError.value = "ไม่สามารถถอดรหัสภาพได้ กรุณาลองใหม่อีกครั้ง";
     isImageLoading.value = false;
   }
 };
 
 const handleImageError = () => {
+  imageError.value = "ไม่สามารถโหลดภาพจากแหล่งข้อมูลได้ในขณะนี้ / Failed to load the full-size image.";
   isImageLoading.value = false;
+};
+
+const retryImageLoad = () => {
+  imageError.value = "";
+  isImageLoading.value = true;
+  imageRenderKey.value += 1;
 };
 
 const handleEscKey = (event: KeyboardEvent) => {
@@ -214,6 +243,8 @@ watch(
   () => {
     if (props.isOpen) {
       isImageLoading.value = true;
+      imageError.value = "";
+      imageRenderKey.value += 1;
       resetTransform();
     }
   }
@@ -222,13 +253,16 @@ watch(
 // Prevent body scroll when modal is open
 watch(
   () => props.isOpen,
-  (newValue) => {
+  (newValue: boolean) => {
     if (newValue) {
       isImageLoading.value = true;
+      imageError.value = "";
+      imageRenderKey.value += 1;
       resetTransform();
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
+      imageError.value = "";
       resetTransform();
     }
   }
@@ -288,6 +322,48 @@ onUnmounted(() => {
   background: rgba(0, 0, 0, 0.3);
 }
 
+.modal-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 24, 39, 0.82);
+}
+
+.modal-hint {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+
+.toolbar-button {
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  background: rgba(255, 255, 255, 0.06);
+  color: #f8fafc;
+  border-radius: 999px;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease-out,
+    border-color 0.2s ease-out,
+    transform 0.2s ease-out;
+}
+
+.toolbar-button:hover {
+  background: rgba(59, 130, 246, 0.18);
+  border-color: rgba(96, 165, 250, 0.42);
+}
+
+.toolbar-button:active {
+  transform: translateY(1px);
+}
+
 .image-info {
   flex: 1;
 }
@@ -336,6 +412,33 @@ onUnmounted(() => {
   overflow: hidden;
   position: relative;
   touch-action: none; /* Disable default touch behaviors like scrolling and pinch-zoom on the container */
+}
+
+.modal-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.875rem;
+  max-width: 34rem;
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(248, 113, 113, 0.2);
+  background: rgba(127, 29, 29, 0.16);
+}
+
+.error-title {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #fee2e2;
+}
+
+.error-text {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #fecaca;
 }
 
 .modal-loading {
@@ -434,6 +537,12 @@ onUnmounted(() => {
     padding: 1rem;
   }
 
+  .modal-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0.75rem 1rem;
+  }
+
   .image-title {
     font-size: 1.25rem;
   }
@@ -444,6 +553,17 @@ onUnmounted(() => {
 
   .modal-body {
     padding: 1rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-button,
+  .fullscreen-image,
+  .modal-enter-active,
+  .modal-leave-active,
+  .modal-enter-active .modal-content,
+  .modal-leave-active .modal-content {
+    transition: none !important;
   }
 }
 </style>

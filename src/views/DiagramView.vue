@@ -4,12 +4,17 @@
             <div class="header-section">
                 <h1 class="page-title">Diagrams</h1>
                 <p class="page-subtitle">
-                    แผนภาพประกอบการทบทวนกฎหมาย เรียกดูได้ทันทีทั้งภาษาไทยและอังกฤษ
+                    แผนภาพสรุปประเด็นกฎหมายสำหรับเปิดทบทวนอย่างรวดเร็ว แล้วขยายอ่านรายละเอียดได้ทันที
                 </p>
                 <div v-if="diagramCategories.length > 0" class="summary-row" aria-label="Diagram summary">
                     <p class="summary-pill">{{ diagramCategories.length }} หมวดหมู่</p>
                     <p class="summary-pill">{{ totalDiagramCount }} แผนภาพ</p>
                 </div>
+            </div>
+
+            <div v-if="openError" class="error-banner" role="alert" aria-live="polite">
+                <p class="error-title">เปิดแผนภาพไม่สำเร็จ</p>
+                <p class="error-message">{{ openError }}</p>
             </div>
 
             <div v-if="diagramCategories.length === 0" class="empty-state">
@@ -36,6 +41,9 @@
                             <button
                                 type="button"
                                 class="image-trigger"
+                                :class="{ 'is-opening': openingImageKey === getCacheKey(category.categoryId, image.filename) }"
+                                :disabled="openingImageKey === getCacheKey(category.categoryId, image.filename)"
+                                :aria-busy="openingImageKey === getCacheKey(category.categoryId, image.filename)"
                                 @click="openImageModal(category, image)"
                                 :aria-label="`เปิดภาพ ${image.nameTh} แบบเต็มหน้าจอ`"
                             >
@@ -57,11 +65,20 @@
                                         @load="handleImageLoad($event, category.categoryId, index)"
                                         @error="handleImageError($event, category.categoryId, index)"
                                     />
+                                    <div class="image-overlay">
+                                        <span class="image-overlay-label">แตะเพื่อขยาย</span>
+                                    </div>
                                 </div>
                             </button>
                             <div class="image-info">
                                 <p class="image-title">{{ image.nameTh }}</p>
                                 <p class="image-subtitle">{{ image.nameEn || "English title unavailable" }}</p>
+                                <p
+                                    v-if="openingImageKey === getCacheKey(category.categoryId, image.filename)"
+                                    class="image-status"
+                                >
+                                    กำลังเปิดภาพขนาดเต็ม...
+                                </p>
                             </div>
                         </article>
                     </div>
@@ -101,6 +118,8 @@ const baseUrl = diagramsConfig.baseUrl;
 const imageLoadingStates = ref<ImageLoadingState>({});
 const imageUrlCache = ref<ImageUrlCache>({});
 const isModalOpen = ref(false);
+const openError = ref("");
+const openingImageKey = ref("");
 const selectedImage = ref({
     url: "",
     title: "",
@@ -180,12 +199,23 @@ const handleImageError = (event: Event, categoryId: string, imageIndex: number) 
 };
 
 const openImageModal = async (category: DiagramCategory, image: DiagramImage) => {
-    selectedImage.value = {
-        url: await getImageUrl(category.categoryId, category.categoryPath, image.filename),
-        title: image.nameTh,
-        subtitle: image.nameEn
-    };
-    isModalOpen.value = true;
+    const imageKey = getCacheKey(category.categoryId, image.filename);
+
+    try {
+        openError.value = "";
+        openingImageKey.value = imageKey;
+
+        selectedImage.value = {
+            url: await getImageUrl(category.categoryId, category.categoryPath, image.filename),
+            title: image.nameTh,
+            subtitle: image.nameEn
+        };
+        isModalOpen.value = true;
+    } catch {
+        openError.value = "ไม่สามารถเปิดแผนภาพได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง / Cannot open this diagram right now. Please try again.";
+    } finally {
+        openingImageKey.value = "";
+    }
 };
 
 const closeImageModal = () => {
@@ -282,6 +312,27 @@ onMounted(async () => {
     color: var(--diagram-accent-deep);
     font-size: 0.875rem;
     font-weight: 600;
+}
+
+.error-banner {
+    border-radius: 1rem;
+    border: 1px solid rgba(239, 68, 68, 0.18);
+    background: rgba(254, 242, 242, 0.95);
+    padding: 1rem 1rem 1.125rem;
+}
+
+.error-title {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #991b1b;
+}
+
+.error-message {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: #7f1d1d;
 }
 
 .empty-state {
@@ -393,6 +444,14 @@ onMounted(async () => {
     text-align: left;
 }
 
+.image-trigger:disabled {
+    cursor: wait;
+}
+
+.image-trigger.is-opening .image-wrapper {
+    opacity: 0.92;
+}
+
 .image-trigger:focus-visible {
     outline: none;
 }
@@ -411,6 +470,36 @@ onMounted(async () => {
 
 .image-trigger:hover .image-wrapper {
     opacity: 0.9;
+}
+
+.image-overlay {
+    position: absolute;
+    inset: auto 0 0 0;
+    display: flex;
+    justify-content: flex-end;
+    padding: 0.75rem;
+    background: linear-gradient(180deg, rgba(15, 23, 42, 0) 0%, rgba(15, 23, 42, 0.4) 100%);
+    opacity: 0;
+    transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (hover: hover) {
+    .image-trigger:hover .image-overlay,
+    .image-card:focus-within .image-overlay {
+        opacity: 1;
+    }
+}
+
+.image-overlay-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    color: #f8fafc;
+    font-size: 0.8125rem;
+    font-weight: 600;
 }
 
 .loading-overlay {
@@ -489,6 +578,14 @@ onMounted(async () => {
     min-height: 2.6em;
 }
 
+.image-status {
+    margin: 0.5rem 0 0;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--diagram-accent-deep);
+}
+
 @media (max-width: 768px) {
     .main-content {
         padding: 1rem 0.75rem 1.5rem;
@@ -554,7 +651,8 @@ onMounted(async () => {
     .image-card,
     .image-wrapper,
     .diagram-image,
-    .spinner {
+    .spinner,
+    .image-overlay {
         transition: none !important;
         animation: none !important;
         transform: none !important;
