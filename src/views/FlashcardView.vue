@@ -1,41 +1,64 @@
 <template>
-    <main class="main-content" ref="flashcardViewRef" v-if="currentCard">
-        <!-- Progress Bar -->
-        <ProgressBar
-            :current-index="currentIndex"
-            :total-cards="totalCards"
-            :completed-count="completedCards.size"
-        />
+    <main class="main-content" ref="flashcardViewRef">
+        <LoadingSpinner v-if="isLoading" message="กำลังโหลดแฟลชการ์ด..." />
 
-        <!-- Flashcard -->
-        <div class="flashcard-wrapper">
-            <FlashCard
-                :card="currentCard"
-                :isFlipped="isFlipped"
-                :hasDescription="currentCardHasDescription"
-                :sectionId="currentCard.id"
-                @flip="toggleFlip"
-                @showDescription="showDescriptionModal"
+        <section v-else-if="loadError" class="status-panel" role="alert" aria-live="assertive">
+            <h2 class="status-title">ไม่สามารถเปิดหน้าแฟลชการ์ดได้</h2>
+            <p class="status-copy">{{ loadError }}</p>
+            <div class="status-actions">
+                <button type="button" class="action-btn action-btn-primary" @click="initializePage">
+                    โหลดอีกครั้ง
+                </button>
+                <button type="button" class="action-btn action-btn-secondary" @click="goBackToCategories">
+                    กลับไปหน้าเลือกหมวด
+                </button>
+            </div>
+        </section>
+
+        <section v-else-if="!currentCard" class="status-panel" role="status" aria-live="polite">
+            <h2 class="status-title">ยังไม่มีแฟลชการ์ดในหมวดนี้</h2>
+            <p class="status-copy">ไม่พบข้อมูลคำถามที่พร้อมใช้งานในหมวดที่เลือก กรุณาเลือกหมวดหรือแหล่งข้อมูลอื่น</p>
+            <div class="status-actions">
+                <button type="button" class="action-btn action-btn-secondary" @click="goBackToCategories">
+                    กลับไปหน้าเลือกหมวด
+                </button>
+            </div>
+        </section>
+
+        <template v-else>
+            <ProgressBar
+                :current-index="currentIndex"
+                :total-cards="totalCards"
+                :completed-count="completedCards.size"
             />
-        </div>
 
-        <!-- Description Modal -->
-        <DescriptionModal
-            :isOpen="isDescriptionModalOpen"
-            :sectionId="currentCard.id"
-            :descriptions="currentDescriptions"
-            @close="closeDescriptionModal"
-        />
+            <div class="flashcard-wrapper">
+                <FlashCard
+                    :card="currentCard"
+                    :isFlipped="isFlipped"
+                    :hasDescription="currentCardHasDescription"
+                    :sectionId="currentCard.id"
+                    @flip="toggleFlip"
+                    @showDescription="showDescriptionModal"
+                />
+            </div>
 
-        <!-- Controls -->
-        <FlashcardControls
-            :current-index="currentIndex"
-            :total-cards="totalCards"
-            @previous="previousCard"
-            @next="nextCard"
-            @shuffle="shuffleCards"
-            @reset="resetProgress"
-        />
+            <DescriptionModal
+                :isOpen="isDescriptionModalOpen"
+                :sectionId="currentCard.id"
+                :descriptions="currentDescriptions"
+                @close="closeDescriptionModal"
+            />
+
+            <FlashcardControls
+                :current-index="currentIndex"
+                :total-cards="totalCards"
+                @previous="previousCard"
+                @next="nextCard"
+                @shuffle="shuffleCards"
+                @reset="resetProgress"
+            />
+        </template>
     </main>
 </template>
 
@@ -46,6 +69,7 @@ import FlashCard from "../components/FlashCard.vue";
 import ProgressBar from "../components/ProgressBar.vue";
 import FlashcardControls from "../components/FlashcardControls.vue";
 import DescriptionModal from "../components/DescriptionModal.vue";
+import LoadingSpinner from "../components/LoadingSpinner.vue";
 import { categoryStores } from "../data/categoryStores";
 import { fetchCategories } from "../services/api";
 import {
@@ -81,6 +105,8 @@ const categories = ref<CategoryStore[]>([]);
 const descriptionsCache = ref<DescriptionCache>({});
 const isDescriptionModalOpen = ref(false);
 const currentDescriptions = ref<Array<{ content: string }>>([]);
+const isLoading = ref(true);
+const loadError = ref<string | null>(null);
 
 // Touch gesture state
 const touchStartX = ref(0);
@@ -121,21 +147,24 @@ const loadCategories = async () => {
         categories.value = apiCategories;
     } catch (err) {
         // Fall back to static data
-        console.warn("Failed to load categories, using static data:", err);
+        if (import.meta.env.DEV) {
+            console.warn("Failed to load categories, using static data:", err);
+        }
         categories.value = categoryStores;
     }
 };
 
 // Load flashcards for the selected category
 const loadFlashcards = async () => {
+    loadError.value = null;
+
     const selectedStore = categories.value.find(
-        (store) => store.id === categoryId.value,
+        (store: CategoryStore) => store.id === categoryId.value,
     );
     
     if (!selectedStore) {
-        // Invalid category ID, redirect to home using replace to avoid adding to history
-        console.warn(`Category not found: ${categoryId.value}`);
-        router.replace('/');
+        loadError.value = "ไม่พบหมวดหมู่ที่เลือก กรุณากลับไปเลือกหมวดใหม่อีกครั้ง";
+        setHeader("ไม่พบหมวดหมู่", "Category not found");
         return;
     }
 
@@ -164,6 +193,30 @@ const loadFlashcards = async () => {
     currentIndex.value = 0;
     isFlipped.value = false;
     completedCards.value.clear();
+
+    if (cards.value.length === 0) {
+        setHeader("ยังไม่มีข้อมูลแฟลชการ์ด", "No flashcards available");
+    }
+};
+
+const initializePage = async () => {
+    isLoading.value = true;
+    loadError.value = null;
+
+    try {
+        await loadCategories();
+        await loadFlashcards();
+        descriptionsCache.value = await getDescriptionsCache();
+    } catch {
+        loadError.value = "ไม่สามารถโหลดข้อมูลแฟลชการ์ดได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง";
+        setHeader("เกิดข้อผิดพลาด", "Something went wrong");
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+const goBackToCategories = () => {
+    router.push({ name: "flashcard-categories" });
 };
 
 // Methods
@@ -271,26 +324,33 @@ const removeTouchListeners = () => {
 };
 
 // Watch for category changes in route params
-watch(() => route.params.categoryId, async (newCategoryId) => {
-    if (newCategoryId && categories.value.length > 0) {
-        loadFlashcards();
-    }
-});
+watch(
+    () => [route.params.categoryId, route.params.dataSourceIndex],
+    async (
+        [newCategoryId, newDataSourceIndex]: [unknown, unknown],
+        [oldCategoryId, oldDataSourceIndex]: [unknown, unknown],
+    ) => {
+        if (
+            categories.value.length > 0
+            && newCategoryId
+            && (newCategoryId !== oldCategoryId || newDataSourceIndex !== oldDataSourceIndex)
+        ) {
+            isLoading.value = true;
+            await loadFlashcards();
+            isLoading.value = false;
+        }
+    },
+);
 
-// Watch for categories to be loaded and then load flashcards
-watch(() => categories.value.length, (newLength) => {
+watch(() => categories.value.length, async (newLength: number) => {
     if (newLength > 0 && categoryId.value) {
-        loadFlashcards();
+        await loadFlashcards();
     }
 });
 
 // Initialize on mount
 onMounted(async () => {
-    await loadCategories();
-    // loadFlashcards will be called by the watch above when categories are loaded
-    
-    // Load descriptions from cache
-    descriptionsCache.value = await getDescriptionsCache();
+    await initializePage();
     
     // Add touch listeners after DOM update
     await nextTick();
@@ -306,6 +366,14 @@ onUnmounted(() => {
 
 <style scoped>
 .main-content {
+    --flashcard-status-ink: #1f2937;
+    --flashcard-status-body: #4b5563;
+    --flashcard-status-border: #e5e7eb;
+    --flashcard-status-surface: #ffffff;
+    --flashcard-accent: #4f46e5;
+    --flashcard-accent-deep: #4338ca;
+    --flashcard-focus: rgba(79, 70, 229, 0.24);
+
     flex: 1;
     padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
     max-width: 600px;
@@ -318,6 +386,91 @@ onUnmounted(() => {
 .flashcard-wrapper {
     width: 100%;
     margin-bottom: 1.5rem;
+}
+
+.status-panel {
+    border: 1px solid var(--flashcard-status-border);
+    border-radius: 1rem;
+    background: var(--flashcard-status-surface);
+    padding: 1.5rem 1.125rem;
+    margin-top: 0.25rem;
+}
+
+.status-title {
+    margin: 0;
+    color: var(--flashcard-status-ink);
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.35;
+}
+
+.status-copy {
+    margin: 0.625rem 0 0;
+    color: var(--flashcard-status-body);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    max-width: 65ch;
+}
+
+.status-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.125rem;
+}
+
+.action-btn {
+    min-height: 2.75rem;
+    border-radius: 0.75rem;
+    border: 1px solid transparent;
+    padding: 0.625rem 1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.action-btn-primary {
+    color: #ffffff;
+    background: linear-gradient(135deg, var(--flashcard-accent) 0%, var(--flashcard-accent-deep) 100%);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.24);
+}
+
+.action-btn-secondary {
+    color: var(--flashcard-status-ink);
+    background: #f9fafb;
+    border-color: var(--flashcard-status-border);
+}
+
+.action-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--flashcard-focus);
+}
+
+@media (hover: hover) {
+    .action-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 7px 16px rgba(79, 70, 229, 0.3);
+    }
+
+    .action-btn-secondary:hover {
+        background-color: #f3f4f6;
+        border-color: #d1d5db;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .action-btn {
+        transition: none;
+    }
+
+    .action-btn-primary:hover {
+        transform: none;
+    }
 }
 
 @media (max-width: 640px) {
