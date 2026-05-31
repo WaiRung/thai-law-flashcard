@@ -88,6 +88,7 @@ import { useHeader } from "../composables/useHeader";
 const router = useRouter();
 const route = useRoute();
 const { setHeader, resetHeader } = useHeader();
+type RouteParam = string | string[] | undefined;
 
 // Get categoryId and dataSourceIndex from route params
 const categoryId = computed(() => route.params.categoryId as string);
@@ -329,7 +330,10 @@ watch(
         () => route.params.categoryId,
         () => route.params.dataSourceIndex,
     ],
-    async ([newCategoryId, newDataSourceIndex], [oldCategoryId, oldDataSourceIndex]) => {
+    async (
+        [newCategoryId, newDataSourceIndex]: [RouteParam, RouteParam],
+        [oldCategoryId, oldDataSourceIndex]: [RouteParam, RouteParam],
+    ) => {
         if (
             categories.value.length > 0
             && newCategoryId
