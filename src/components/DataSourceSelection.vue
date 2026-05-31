@@ -3,9 +3,12 @@
         <div class="datasource-header">
             <h2 class="datasource-title">{{ categoryName }}</h2>
             <p class="datasource-subtitle">เลือกแหล่งข้อมูล / Select Data Source</p>
+            <div v-if="dataSources.length > 0" class="datasource-summary" aria-label="Data source summary">
+                <p class="summary-pill">{{ dataSources.length }} แหล่งข้อมูล</p>
+            </div>
         </div>
 
-        <div class="datasource-grid">
+        <div v-if="dataSources.length > 0" class="datasource-grid">
             <button
                 v-for="(dataSource, index) in dataSources"
                 :key="index"
@@ -14,10 +17,35 @@
                 class="datasource-card"
                 :aria-label="`เลือกแหล่งข้อมูล ${dataSource.nameTh || `แหล่งข้อมูล ${index + 1}`}`"
             >
-                <div class="datasource-icon">📚</div>
-                <div class="datasource-name-th">{{ dataSource.nameTh || `แหล่งข้อมูล ${index + 1}` }}</div>
-                <div class="datasource-name-en">{{ dataSource.nameEn || `Data Source ${index + 1}` }}</div>
+                <div class="datasource-card-main">
+                    <div class="datasource-icon" aria-hidden="true">📚</div>
+                    <div class="datasource-copy">
+                        <div class="datasource-name-th">{{ dataSource.nameTh || `แหล่งข้อมูล ${index + 1}` }}</div>
+                        <div class="datasource-name-en">{{ dataSource.nameEn || `Data Source ${index + 1}` }}</div>
+                    </div>
+                    <div class="datasource-arrow" aria-hidden="true">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            class="datasource-arrow-icon"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                            />
+                        </svg>
+                    </div>
+                </div>
             </button>
+        </div>
+
+        <div v-else class="datasource-empty-state" role="status" aria-live="polite">
+            <p class="empty-title">ยังไม่พบแหล่งข้อมูลสำหรับหมวดนี้</p>
+            <p class="empty-subtitle">No data sources are available right now.</p>
         </div>
     </div>
 </template>
@@ -63,7 +91,11 @@ const selectDataSource = (dataSourceIndex: number) => {
 
 .datasource-header {
     text-align: center;
-    margin-bottom: 1.5rem;
+    margin-bottom: 1.25rem;
+    padding: 1.25rem 1rem 1.375rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(229, 231, 235, 0.82);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(243, 244, 246, 0.92) 100%);
 }
 
 .datasource-title {
@@ -77,10 +109,31 @@ const selectDataSource = (dataSourceIndex: number) => {
 }
 
 .datasource-subtitle {
-    font-size: 1.125rem;
+    font-size: 1rem;
     color: var(--source-body);
     margin: 0;
     line-height: 1.6;
+}
+
+.datasource-summary {
+    display: flex;
+    justify-content: center;
+    margin-top: 0.875rem;
+}
+
+.summary-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(59, 130, 246, 0.16);
+    background: rgba(59, 130, 246, 0.08);
+    color: #1d4ed8;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
 }
 
 .datasource-grid {
@@ -94,7 +147,7 @@ const selectDataSource = (dataSourceIndex: number) => {
     background: var(--source-surface);
     border: 1px solid var(--source-border);
     border-radius: 1rem;
-    padding: 1.5rem 1rem;
+    padding: 1.125rem 1rem;
     cursor: pointer;
     transition:
         transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -103,10 +156,10 @@ const selectDataSource = (dataSourceIndex: number) => {
         background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
+    align-items: stretch;
+    text-align: left;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    min-height: 148px;
+    min-height: 0;
     -webkit-tap-highlight-color: transparent;
     width: 100%;
 }
@@ -117,6 +170,11 @@ const selectDataSource = (dataSourceIndex: number) => {
         box-shadow: 0 6px 14px rgba(59, 130, 246, 0.16);
         border-color: var(--source-accent);
         background: var(--source-surface-soft);
+    }
+
+    .datasource-card:hover .datasource-arrow-icon {
+        transform: translateX(4px);
+        color: var(--source-accent);
     }
 }
 
@@ -129,16 +187,47 @@ const selectDataSource = (dataSourceIndex: number) => {
     outline-offset: 2px;
 }
 
+.datasource-card-main {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
 .datasource-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.875rem;
+    font-size: 1.875rem;
+    width: 2.75rem;
+    height: 2.75rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.875rem;
+    background: rgba(59, 130, 246, 0.08);
+    flex-shrink: 0;
+}
+
+.datasource-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.datasource-arrow {
+    flex-shrink: 0;
+    color: #94a3b8;
+}
+
+.datasource-arrow-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .datasource-name-th {
     font-size: 1.125rem;
     font-weight: 600;
     color: var(--source-ink);
-    margin-bottom: 0.375rem;
+    margin-bottom: 0.25rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
@@ -150,9 +239,39 @@ const selectDataSource = (dataSourceIndex: number) => {
     overflow-wrap: anywhere;
 }
 
+.datasource-empty-state {
+    border-radius: 1rem;
+    border: 1px solid var(--source-border);
+    background: var(--source-surface);
+    padding: 1.75rem 1.125rem;
+    text-align: center;
+}
+
+.empty-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--source-ink);
+}
+
+.empty-subtitle {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--source-body);
+}
+
 @media (max-width: 640px) {
     .datasource-container {
         padding: 0.25rem 0 0.5rem;
+    }
+
+    .datasource-header {
+        padding: 1rem 0.875rem 1.125rem;
+    }
+
+    .datasource-title {
+        font-size: 1.5rem;
     }
 
     .datasource-subtitle {
@@ -165,18 +284,30 @@ const selectDataSource = (dataSourceIndex: number) => {
     }
 
     .datasource-card {
-        padding: 1.5rem 1rem;
-        min-height: 132px;
+        padding: 1rem;
     }
 
     .datasource-icon {
-        font-size: 2.25rem;
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 1.625rem;
+    }
+
+    .datasource-name-th {
+        font-size: 1.05rem;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .datasource-card {
+    .datasource-card,
+    .datasource-arrow-icon {
         transition: none;
+    }
+
+    .datasource-card:hover,
+    .datasource-card:active,
+    .datasource-card:hover .datasource-arrow-icon {
+        transform: none;
     }
 }
 </style>
