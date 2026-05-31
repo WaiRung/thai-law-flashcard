@@ -1,5 +1,13 @@
 <template>
-    <div class="flashcard-container" @click="handleFlip">
+    <div
+        class="flashcard-container"
+        role="button"
+        tabindex="0"
+        :aria-label="isFlipped ? 'แตะเพื่อดูคำใบ้' : 'แตะเพื่อดูคำตอบ'"
+        @click="handleFlip"
+        @keydown.enter.prevent="handleFlip"
+        @keydown.space.prevent="handleFlip"
+    >
         <div class="flashcard" :class="{ 'is-flipped': isFlipped }">
             <div class="flashcard-face flashcard-front">
                 <div class="card-content">
@@ -11,6 +19,7 @@
             <div class="flashcard-face flashcard-back">
                 <button
                     v-if="hasDescription"
+                    type="button"
                     class="info-button"
                     @click.stop="handleShowDescription"
                     aria-label="ดูคำอธิบายเพิ่มเติม"
@@ -77,10 +86,16 @@ const handleShowDescription = () => {
     z-index: 10;
 }
 
+.flashcard-container:focus-visible {
+    outline: 3px solid rgba(56, 189, 248, 0.4);
+    outline-offset: 3px;
+    border-radius: 1rem;
+}
+
 .flashcard {
     position: relative;
     width: 100%;
-    transition: transform 0.6s;
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
     transform-style: preserve-3d;
 }
 
@@ -90,7 +105,7 @@ const handleShowDescription = () => {
 
 .flashcard-face {
     width: 100%;
-    min-height: 400px;
+    min-height: 380px;
     backface-visibility: hidden;
     border-radius: 1rem;
     display: flex;
@@ -120,8 +135,8 @@ const handleShowDescription = () => {
     position: absolute;
     top: 1rem;
     right: 1rem;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.2);
     border: 2px solid rgba(255, 255, 255, 0.5);
@@ -129,19 +144,30 @@ const handleShowDescription = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 20;
     padding: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.info-button:hover {
-    background-color: rgba(255, 255, 255, 0.3);
-    border-color: rgba(255, 255, 255, 0.7);
-    transform: scale(1.05);
+@media (hover: hover) {
+    .info-button:hover {
+        background-color: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.7);
+        transform: scale(1.05);
+    }
 }
 
 .info-button:active {
     transform: scale(0.95);
+}
+
+.info-button:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.75);
+    outline-offset: 2px;
 }
 
 .info-icon {
@@ -169,7 +195,7 @@ const handleShowDescription = () => {
 }
 
 .card-text {
-    font-size: 1.5rem;
+    font-size: clamp(1.125rem, 2.8vw, 1.5rem);
     line-height: 1.6;
     text-align: center;
     font-weight: 500;
@@ -179,7 +205,7 @@ const handleShowDescription = () => {
 }
 
 .card-answer {
-    font-size: 1.5rem;
+    font-size: clamp(1.125rem, 2.8vw, 1.5rem);
     line-height: 1.6;
     text-align: left;
     font-weight: 500;
@@ -199,7 +225,7 @@ const handleShowDescription = () => {
 
 .tap-hint {
     margin-top: 1.5rem;
-    font-size: 0.875rem;
+    font-size: 0.8125rem;
     opacity: 0.7;
     font-style: italic;
 }
@@ -207,7 +233,7 @@ const handleShowDescription = () => {
 @media (max-width: 640px) {
     .flashcard-face {
         padding: 1.5rem;
-        min-height: 350px;
+        min-height: 330px;
     }
 
     .card-label {
@@ -219,6 +245,11 @@ const handleShowDescription = () => {
         font-size: 1.125rem;
     }
 
+    .card-answer {
+        font-size: 1.0625rem;
+        line-height: 1.7;
+    }
+
     .card-category {
         font-size: 0.75rem;
         margin-top: 1rem;
@@ -227,6 +258,17 @@ const handleShowDescription = () => {
     .tap-hint {
         font-size: 0.75rem;
         margin-top: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .flashcard,
+    .info-button {
+        transition: none;
+    }
+
+    .flashcard.is-flipped {
+        transform: rotateY(180deg);
     }
 }
 </style>

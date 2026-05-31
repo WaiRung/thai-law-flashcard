@@ -73,7 +73,7 @@ onUnmounted(() => {
 <style scoped>
 .main-content {
     flex: 1;
-    padding: 1.5rem 1rem;
+    padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
@@ -83,7 +83,7 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 0.875rem max(0.75rem, env(safe-area-inset-right, 0px)) 1rem max(0.75rem, env(safe-area-inset-left, 0px));
     }
 }
 </style>

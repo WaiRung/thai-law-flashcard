@@ -2,8 +2,8 @@
     <main class="main-content">
         <div class="document-container">
             <div class="header-section">
-                <h2 class="page-title">Documents</h2>
-                <p class="page-subtitle">เอกสาร PDF</p>
+                <h1 class="page-title">Documents</h1>
+                <p class="page-subtitle">เอกสาร PDF สำหรับอ่านบนมือถือและแท็บเล็ต</p>
             </div>
 
             <div v-if="documentCategories.length === 0" class="empty-state">
@@ -22,16 +22,14 @@
                         <p class="category-subtitle">{{ category.nameEn }}</p>
                     </div>
 
-                    <div v-if="category.files.length === 0" class="no-files">
-                        <p class="no-files-text">ไม่มีเอกสารในหมวดนี้</p>
-                    </div>
-
-                    <div v-else class="files-grid">
-                        <div
+                    <div class="files-grid">
+                        <button
                             v-for="(file, index) in category.files"
                             :key="index"
+                            type="button"
                             class="file-card"
                             @click="openDocument(category, file)"
+                            :aria-label="`เปิดเอกสาร ${file.nameTh}`"
                         >
                             <div class="file-icon">📄</div>
                             <div class="file-info">
@@ -54,7 +52,7 @@
                                     />
                                 </svg>
                             </div>
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -153,9 +151,19 @@ onMounted(() => {
 
 <style scoped>
 .main-content {
+    --document-ink: #1f2937;
+    --document-body: #4b5563;
+    --document-muted: #6b7280;
+    --document-border: #e5e7eb;
+    --document-surface: #ffffff;
+    --document-surface-soft: #f9fafb;
+    --document-accent: #3b82f6;
+    --document-accent-deep: #2563eb;
+    --document-focus: rgba(37, 99, 235, 0.22);
+
     flex: 1;
-    padding: 1.5rem 1rem;
-    max-width: 1200px;
+    padding: 1.25rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.5rem max(0.75rem, env(safe-area-inset-left, 0px));
+    max-width: 900px;
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -170,83 +178,77 @@ onMounted(() => {
 
 .header-section {
     text-align: center;
-    padding: 1rem 0 2rem;
+    padding: 1rem 0 1.5rem;
 }
 
 .page-title {
-    font-size: 2.5rem;
+    font-size: clamp(1.875rem, 4vw, 2.5rem);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--document-ink);
     margin: 0 0 0.5rem 0;
+    line-height: 1.2;
 }
 
 .page-subtitle {
     font-size: 1.125rem;
-    color: #6b7280;
+    color: var(--document-body);
     margin: 0;
+    line-height: 1.6;
+    max-width: 56ch;
+    margin-inline: auto;
 }
 
 .empty-state {
     text-align: center;
     padding: 3rem 1rem;
-    background: white;
+    background: var(--document-surface);
     border-radius: 1rem;
-    border: 2px solid #e5e7eb;
+    border: 1px solid var(--document-border);
 }
 
 .empty-message {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--document-ink);
     margin: 0 0 0.5rem 0;
 }
 
 .empty-submessage {
     font-size: 1rem;
-    color: #6b7280;
+    color: var(--document-body);
     margin: 0;
 }
 
 .categories-list {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
 }
 
 .category-section {
-    background: white;
+    background: var(--document-surface);
     border-radius: 1rem;
-    padding: 2rem;
-    border: 2px solid #e5e7eb;
+    padding: 1.25rem;
+    border: 1px solid var(--document-border);
 }
 
 .category-header {
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 1px solid var(--document-border);
 }
 
 .category-title {
-    font-size: 1.75rem;
+    font-size: clamp(1.25rem, 3vw, 1.75rem);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--document-ink);
     margin: 0 0 0.25rem 0;
+    overflow-wrap: anywhere;
 }
 
 .category-subtitle {
     font-size: 1rem;
-    color: #6b7280;
-    margin: 0;
-}
-
-.no-files {
-    text-align: center;
-    padding: 2rem 1rem;
-}
-
-.no-files-text {
-    font-size: 1rem;
-    color: #9ca3af;
+    color: var(--document-body);
     margin: 0;
 }
 
@@ -260,23 +262,39 @@ onMounted(() => {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.25rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    padding: 1rem;
+    background: var(--document-surface-soft);
+    border: 1px solid var(--document-border);
     border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    width: 100%;
+    text-align: left;
+    min-height: 72px;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.file-card:hover {
-    background: white;
-    border-color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+@media (hover: hover) {
+    .file-card:hover {
+        background: var(--document-surface);
+        border-color: var(--document-accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
 }
 
 .file-card:active {
     transform: translateY(0);
+}
+
+.file-card:focus-visible {
+    outline: 3px solid var(--document-focus);
+    outline-offset: 2px;
+    border-color: var(--document-accent-deep);
 }
 
 .file-icon {
@@ -289,16 +307,18 @@ onMounted(() => {
 }
 
 .file-title {
-    font-size: 1.125rem;
+    font-size: 1rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--document-ink);
     margin: 0 0 0.25rem 0;
+    line-height: 1.4;
 }
 
 .file-subtitle {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--document-body);
     margin: 0;
+    line-height: 1.45;
 }
 
 .file-arrow {
@@ -308,22 +328,24 @@ onMounted(() => {
 .arrow-icon {
     width: 1.5rem;
     height: 1.5rem;
-    color: #9ca3af;
+    color: #94a3b8;
     transition: all 0.2s;
 }
 
-.file-card:hover .arrow-icon {
-    color: #3b82f6;
-    transform: translateX(4px);
+@media (hover: hover) {
+    .file-card:hover .arrow-icon {
+        color: var(--document-accent);
+        transform: translateX(4px);
+    }
 }
 
 @media (max-width: 768px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
     }
 
     .header-section {
-        padding: 0.5rem 0 1.5rem;
+        padding: 0.5rem 0 1rem;
     }
 
     .page-title {
@@ -335,11 +357,7 @@ onMounted(() => {
     }
 
     .category-section {
-        padding: 1.5rem;
-    }
-
-    .category-title {
-        font-size: 1.5rem;
+        padding: 1rem;
     }
 
     .file-card {
@@ -366,6 +384,13 @@ onMounted(() => {
 
     .category-section {
         padding: 1rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .file-card,
+    .arrow-icon {
+        transition: none;
     }
 }
 </style>

@@ -144,7 +144,7 @@ onUnmounted(() => {
 <style scoped>
 .main-content {
     flex: 1;
-    padding: 1.5rem 1rem;
+    padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
@@ -163,6 +163,7 @@ onUnmounted(() => {
     margin-bottom: 1.5rem;
     color: #92400e;
     animation: slideIn 0.3s ease-out;
+    line-height: 1.45;
 }
 
 @keyframes slideIn {
@@ -185,11 +186,28 @@ onUnmounted(() => {
     font-size: 0.875rem;
     font-weight: 500;
     flex: 1;
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 640px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 0.875rem max(0.75rem, env(safe-area-inset-right, 0px)) 1rem max(0.75rem, env(safe-area-inset-left, 0px));
+    }
+
+    .warning-banner {
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+        padding: 0.75rem;
+    }
+
+    .warning-text {
+        font-size: 0.8125rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .warning-banner {
+        animation: none;
     }
 }
 </style>

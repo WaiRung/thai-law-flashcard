@@ -14,9 +14,10 @@ import AppHeader from "./components/AppHeader.vue";
 
 <style scoped>
 .app-container {
-    min-height: 100vh;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     background: linear-gradient(to bottom, #f3f4f6, #e5e7eb);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 </style>

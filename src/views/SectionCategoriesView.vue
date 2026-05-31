@@ -13,6 +13,7 @@
                         v-for="category in categoriesWithSections"
                         :key="category.categoryId"
                         @click="selectCategory(category.categoryId)"
+                        type="button"
                         class="category-item"
                     >
                         <div class="category-icon">📜</div>
@@ -144,8 +145,17 @@ onUnmounted(() => {
 
 <style scoped>
 .main-content {
+    --section-cat-ink: #1f2937;
+    --section-cat-body: #4b5563;
+    --section-cat-muted: #6b7280;
+    --section-cat-border: #e5e7eb;
+    --section-cat-surface: #ffffff;
+    --section-cat-surface-soft: #f9fafb;
+    --section-cat-accent: #3b82f6;
+    --section-cat-focus: rgba(37, 99, 235, 0.24);
+
     flex: 1;
-    padding: 1.5rem 1rem;
+    padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
@@ -161,20 +171,23 @@ onUnmounted(() => {
 
 .header-section {
     text-align: center;
-    padding: 1rem 0;
+    padding: 0.75rem 0;
 }
 
 .title {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 4vw, 2rem);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--section-cat-ink);
     margin: 0 0 0.5rem 0;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .subtitle {
     font-size: 1.125rem;
-    color: #6b7280;
+    color: var(--section-cat-muted);
     margin: 0;
+    line-height: 1.6;
 }
 
 .categories-list {
@@ -187,25 +200,38 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 1.5rem;
-    background: white;
-    border: 2px solid #e5e7eb;
+    padding: 1.25rem;
+    background: var(--section-cat-surface);
+    border: 1px solid var(--section-cat-border);
     border-radius: 1rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     text-align: left;
     width: 100%;
+    min-height: 84px;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.category-item:hover {
-    background: #f9fafb;
-    border-color: #3b82f6;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+@media (hover: hover) {
+    .category-item:hover {
+        background: var(--section-cat-surface-soft);
+        border-color: var(--section-cat-accent);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    }
 }
 
 .category-item:active {
     transform: translateY(0);
+}
+
+.category-item:focus-visible {
+    outline: 3px solid var(--section-cat-focus);
+    outline-offset: 2px;
 }
 
 .category-icon {
@@ -220,13 +246,14 @@ onUnmounted(() => {
 .category-name {
     font-size: 1.25rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--section-cat-ink);
     margin-bottom: 0.25rem;
+    overflow-wrap: anywhere;
 }
 
 .category-count {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--section-cat-body);
 }
 
 .category-arrow {
@@ -240,9 +267,11 @@ onUnmounted(() => {
     transition: all 0.2s;
 }
 
-.category-item:hover .arrow-icon {
-    color: #3b82f6;
-    transform: translateX(4px);
+@media (hover: hover) {
+    .category-item:hover .arrow-icon {
+        color: var(--section-cat-accent);
+        transform: translateX(4px);
+    }
 }
 
 .empty-state {
@@ -254,7 +283,7 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 0.875rem max(0.75rem, env(safe-area-inset-right, 0px)) 1rem max(0.75rem, env(safe-area-inset-left, 0px));
     }
 
     .title {
@@ -266,7 +295,8 @@ onUnmounted(() => {
     }
 
     .category-item {
-        padding: 1.25rem;
+        padding: 1rem;
+        min-height: 76px;
     }
 
     .category-icon {
@@ -279,6 +309,13 @@ onUnmounted(() => {
 
     .category-count {
         font-size: 0.8125rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .category-item,
+    .arrow-icon {
+        transition: none;
     }
 }
 </style>

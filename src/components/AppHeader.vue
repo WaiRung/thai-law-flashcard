@@ -4,6 +4,7 @@
             <button
                 v-show="showBackButton"
                 @click="handleBack"
+                type="button"
                 class="back-btn"
                 aria-label="Back to categories"
             >
@@ -52,7 +53,7 @@ const handleBack = () => {
 .app-header {
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     color: white;
-    padding: 1.5rem 1rem;
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) 1rem max(1rem, env(safe-area-inset-left, 0px));
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -60,11 +61,11 @@ const handleBack = () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 1rem;
+    gap: 0.875rem;
     max-width: 800px;
     margin: 0 auto;
     position: relative;
-    padding: 0 3rem;
+    padding: 0 3.25rem;
 }
 
 .back-btn {
@@ -73,22 +74,36 @@ const handleBack = () => {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     color: white;
-    padding: 0.5rem;
+    width: 44px;
+    height: 44px;
     border-radius: 0.5rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.back-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-    transform: translateX(-2px);
+@media (hover: hover) {
+    .back-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        transform: translateX(-2px);
+    }
 }
 
 .back-btn:active {
+    background: rgba(255, 255, 255, 0.3);
     transform: translateX(0);
+}
+
+.back-btn:focus-visible {
+    outline: 3px solid rgba(219, 234, 254, 0.9);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.24);
 }
 
 .back-icon {
@@ -104,33 +119,34 @@ const handleBack = () => {
 
 .header-text {
     text-align: center;
+    min-width: 0;
 }
 
 .app-title {
-    font-size: 1.875rem;
+    font-size: clamp(1.25rem, 4.5vw, 1.875rem);
     font-weight: 700;
     margin: 0;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.375rem;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .app-subtitle {
-    font-size: 1rem;
+    font-size: clamp(0.875rem, 2.8vw, 1rem);
     margin: 0;
     opacity: 0.9;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
 }
 
 @media (max-width: 640px) {
     .app-header {
-        padding: 1rem 0.75rem;
+        padding: calc(0.75rem + env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) 0.75rem max(0.75rem, env(safe-area-inset-left, 0px));
     }
 
     .header-content {
         gap: 0.5rem;
-        padding: 0 2.5rem;
-    }
-
-    .back-btn {
-        padding: 0.375rem;
+        padding: 0 2.9rem;
     }
 
     .back-icon {
@@ -143,12 +159,15 @@ const handleBack = () => {
         height: 2.5rem;
     }
 
-    .app-title {
-        font-size: 1.5rem;
-    }
-
     .app-subtitle {
-        font-size: 0.875rem;
+        max-width: 34ch;
+        margin-inline: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .back-btn {
+        transition: none;
     }
 }
 </style>

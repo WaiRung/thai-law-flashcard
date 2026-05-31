@@ -26,6 +26,7 @@
                                     v-if="hasDescription(section)"
                                     class="info-button-list"
                                     @click="showDescriptionModal(section)"
+                                    type="button"
                                     aria-label="ดูคำอธิบายเพิ่มเติม"
                                 >
                                     <svg
@@ -240,9 +241,18 @@ onUnmounted(() => {
 
 <style scoped>
 .main-content {
+    --sections-ink: #1f2937;
+    --sections-body: #374151;
+    --sections-muted: #6b7280;
+    --sections-border: #e5e7eb;
+    --sections-surface: #ffffff;
+    --sections-surface-soft: #f9fafb;
+    --sections-accent: #3b82f6;
+    --sections-focus: rgba(37, 99, 235, 0.24);
+
     flex: 1;
-    padding: 1.5rem 1rem;
-    max-width: 800px;
+    padding: 1.25rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.5rem max(0.75rem, env(safe-area-inset-left, 0px));
+    max-width: 860px;
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -257,36 +267,39 @@ onUnmounted(() => {
 
 .header-section {
     text-align: center;
-    padding: 1rem 0;
+    padding: 0.75rem 0;
 }
 
 .title {
-    font-size: 2rem;
+    font-size: clamp(1.625rem, 4.2vw, 2rem);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--sections-ink);
     margin: 0 0 0.5rem 0;
+    line-height: 1.25;
+    overflow-wrap: anywhere;
 }
 
 .subtitle {
     font-size: 1.125rem;
-    color: #6b7280;
+    color: var(--sections-muted);
     margin: 0;
 }
 
 .category-section {
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--sections-surface);
+    border: 1px solid var(--sections-border);
     border-radius: 1rem;
-    padding: 1.5rem;
+    padding: 1.25rem;
 }
 
 .category-title {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--sections-ink);
     margin: 0 0 1rem 0;
     padding-bottom: 0.75rem;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 1px solid var(--sections-border);
+    overflow-wrap: anywhere;
 }
 
 .sections-list {
@@ -296,17 +309,22 @@ onUnmounted(() => {
 }
 
 .section-item {
-    padding: 1.5rem;
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    padding: 1.25rem;
+    background: var(--sections-surface-soft);
+    border: 1px solid var(--sections-border);
     border-radius: 0.75rem;
-    transition: all 0.2s;
+    transition:
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.section-item:hover {
-    background: #f3f4f6;
-    border-color: #3b82f6;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+@media (hover: hover) {
+    .section-item:hover {
+        background: #f3f4f6;
+        border-color: var(--sections-accent);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    }
 }
 
 .section-header-row {
@@ -320,12 +338,13 @@ onUnmounted(() => {
 .section-header {
     font-size: 1rem;
     font-weight: 700;
-    color: #3b82f6;
+    color: var(--sections-accent);
+    overflow-wrap: anywhere;
 }
 
 .info-button-list {
-    width: 32px;
-    height: 32px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
     border: none;
@@ -336,15 +355,23 @@ onUnmounted(() => {
     transition: all 0.2s;
     padding: 0;
     flex-shrink: 0;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.info-button-list:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+@media (hover: hover) {
+    .info-button-list:hover {
+        transform: scale(1.06);
+        box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
+    }
 }
 
 .info-button-list:active {
     transform: scale(0.95);
+}
+
+.info-button-list:focus-visible {
+    outline: 3px solid var(--sections-focus);
+    outline-offset: 2px;
 }
 
 .info-button-list .info-icon {
@@ -358,15 +385,15 @@ onUnmounted(() => {
     font-weight: 700;
     color: #059669;
     margin-bottom: 0.75rem;
-    padding: 0.5rem;
+    padding: 0.5rem 0.625rem;
     background: #f0fdf4;
-    border-left: 4px solid #059669;
-    border-radius: 0.25rem;
+    border: 1px solid #86efac;
+    border-radius: 0.5rem;
 }
 
 .section-answer {
-    font-size: 0.875rem;
-    color: #1f2937;
+    font-size: 0.9375rem;
+    color: var(--sections-body);
     line-height: 1.8;
     white-space: pre-wrap;
     word-wrap: break-word;
@@ -381,7 +408,7 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
     }
 
     .title {
@@ -402,7 +429,6 @@ onUnmounted(() => {
 
     .section-item {
         padding: 1rem;
-        font-size: 0.8125rem;
     }
 
     .section-header-row {
@@ -414,8 +440,8 @@ onUnmounted(() => {
     }
 
     .info-button-list {
-        width: 28px;
-        height: 28px;
+        width: 42px;
+        height: 42px;
     }
 
     .info-button-list .info-icon {
@@ -430,7 +456,18 @@ onUnmounted(() => {
     }
 
     .section-answer {
-        font-size: 0.8125rem;
+        font-size: 0.875rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .section-item,
+    .info-button-list {
+        transition: none;
+    }
+
+    .info-button-list:active {
+        transform: none;
     }
 }
 </style>

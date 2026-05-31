@@ -4,6 +4,7 @@
         <div class="controls">
             <button
                 @click="handlePrevious"
+                type="button"
                 :disabled="currentIndex === 0"
                 class="control-btn control-prev"
                 aria-label="Previous card"
@@ -27,6 +28,7 @@
 
             <button
                 @click="handleShuffle"
+                type="button"
                 class="control-btn control-shuffle"
                 aria-label="Shuffle cards"
             >
@@ -49,6 +51,7 @@
 
             <button
                 @click="handleNext"
+                type="button"
                 :disabled="currentIndex === totalCards - 1"
                 class="control-btn control-next"
                 aria-label="Next card"
@@ -73,7 +76,7 @@
 
         <!-- Reset Button -->
         <div class="reset-section">
-            <button @click="handleReset" class="reset-btn">
+            <button type="button" @click="handleReset" class="reset-btn">
                 รีเซ็ตความคืบหน้า
             </button>
         </div>
@@ -132,15 +135,22 @@ const handleReset = () => {
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     color: white;
     background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
     box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.control-btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+@media (hover: hover) {
+    .control-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
 }
 
 .control-btn:active:not(:disabled) {
@@ -158,8 +168,16 @@ const handleReset = () => {
     box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
 }
 
-.control-shuffle:hover {
-    box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+@media (hover: hover) {
+    .control-shuffle:hover {
+        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.4);
+    }
+}
+
+.control-btn:focus-visible,
+.reset-btn:focus-visible {
+    outline: 3px solid rgba(37, 99, 235, 0.28);
+    outline-offset: 2px;
 }
 
 .btn-icon {
@@ -186,14 +204,21 @@ const handleReset = () => {
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.reset-btn:hover {
-    background-color: #dc2626;
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+@media (hover: hover) {
+    .reset-btn:hover {
+        background-color: #dc2626;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+    }
 }
 
 .reset-btn:active {
@@ -203,11 +228,14 @@ const handleReset = () => {
 @media (max-width: 640px) {
     .controls {
         gap: 0.5rem;
+        justify-content: stretch;
     }
 
     .control-btn {
-        padding: 0.625rem 1rem;
+        padding: 0.625rem 0.875rem;
         font-size: 0.875rem;
+        flex: 1;
+        justify-content: center;
     }
 
     .btn-text {
@@ -223,6 +251,11 @@ const handleReset = () => {
         width: 1.25rem;
         height: 1.25rem;
     }
+
+    .reset-btn {
+        width: 100%;
+        max-width: 18rem;
+    }
 }
 
 @media (min-width: 641px) {
@@ -230,6 +263,18 @@ const handleReset = () => {
     .control-next .btn-icon {
         width: 1.5rem;
         height: 1.5rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .control-btn,
+    .reset-btn {
+        transition: none;
+    }
+
+    .control-btn:active:not(:disabled),
+    .reset-btn:active {
+        transform: none;
     }
 }
 </style>

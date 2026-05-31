@@ -45,6 +45,7 @@
             <div v-if="!isLoading && !error" class="modal-footer">
               <div class="controls-group">
                 <button 
+                  type="button"
                   class="control-button"
                   @click="previousPage"
                   :disabled="currentPage <= 1"
@@ -62,6 +63,7 @@
                 </div>
                 
                 <button 
+                  type="button"
                   class="control-button"
                   @click="nextPage"
                   :disabled="currentPage >= totalPages"
@@ -75,6 +77,7 @@
               
               <div class="controls-group">
                 <button 
+                  type="button"
                   class="control-button"
                   @click="zoomOut"
                   :disabled="zoomLevel <= 0.5"
@@ -90,6 +93,7 @@
                 <span class="zoom-level">{{ Math.round(zoomLevel * 100) }}%</span>
                 
                 <button 
+                  type="button"
                   class="control-button"
                   @click="zoomIn"
                   :disabled="zoomLevel >= 3.0"
@@ -106,6 +110,7 @@
               
               <div class="controls-group">
                 <button 
+                  type="button"
                   class="control-button"
                   @click="downloadPdf"
                   aria-label="Download PDF"
@@ -119,6 +124,7 @@
                 </button>
                 
                 <button 
+                  type="button"
                   class="control-button"
                   @click="toggleFullscreen"
                   aria-label="Toggle fullscreen"
@@ -487,7 +493,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 1rem;
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) max(0.75rem, env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
 }
 
 .modal-container {
@@ -513,7 +519,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1.5rem;
+  padding: 1.25rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.3);
 }
@@ -540,21 +546,34 @@ onUnmounted(() => {
   color: white;
   border: none;
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-left: 1rem;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.close-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+@media (hover: hover) {
+  .close-button:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
 .close-button:active {
   transform: scale(0.95);
+}
+
+.close-button:focus-visible,
+.retry-button:focus-visible,
+.control-button:focus-visible {
+  outline: 3px solid rgba(147, 197, 253, 0.45);
+  outline-offset: 2px;
 }
 
 .modal-body {
@@ -562,7 +581,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.5rem;
+  padding: 1rem;
   overflow: auto;
   position: relative;
 }
@@ -621,13 +640,19 @@ onUnmounted(() => {
   border-radius: 0.5rem;
   padding: 0.75rem 1.5rem;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   font-size: 1rem;
   font-weight: 600;
+  min-height: 44px;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.retry-button:hover {
-  background: #2563eb;
+@media (hover: hover) {
+  .retry-button:hover {
+    background: #2563eb;
+  }
 }
 
 .retry-button:active {
@@ -698,7 +723,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
+  padding: 0.875rem 1rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(0, 0, 0, 0.3);
   gap: 1rem;
@@ -716,16 +741,22 @@ onUnmounted(() => {
   color: white;
   border: none;
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition:
+    background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.control-button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.2);
+@media (hover: hover) {
+  .control-button:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+  }
 }
 
 .control-button:active:not(:disabled) {
@@ -789,7 +820,7 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .modal-overlay {
-    padding: 0;
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   }
 
   .modal-container {
@@ -803,7 +834,7 @@ onUnmounted(() => {
   }
 
   .modal-header {
-    padding: 1rem;
+    padding: 0.875rem 0.875rem 0.75rem;
   }
 
   .pdf-title {
@@ -815,23 +846,48 @@ onUnmounted(() => {
   }
 
   .modal-body {
-    padding: 1rem;
+    padding: 0.75rem;
   }
 
   .modal-footer {
-    padding: 0.75rem 1rem;
-    gap: 0.5rem;
-    justify-content: center;
+    padding: 0.625rem 0.75rem;
+    gap: 0.5rem 0.875rem;
+    justify-content: space-between;
   }
 
   .controls-group {
     gap: 0.25rem;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .page-info {
+    font-size: 0.875rem;
+  }
+
+  .zoom-level {
+    min-width: 3.2rem;
+    font-size: 0.8125rem;
   }
 
   /* Enhanced mobile animations with CSS custom properties */
   .pdf-canvas {
     --slide-distance: 50px;
     --slide-start-opacity: 0.2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .close-button,
+  .retry-button,
+  .control-button,
+  .pdf-canvas,
+  .modal-enter-active,
+  .modal-leave-active,
+  .modal-enter-active .modal-content,
+  .modal-leave-active .modal-content {
+    transition: none !important;
+    animation: none !important;
   }
 }
 </style>

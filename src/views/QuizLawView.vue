@@ -377,7 +377,7 @@ onUnmounted(() => {
 <style scoped>
 .main-content {
     flex: 1;
-    padding: 1.5rem 1rem;
+    padding: 1.25rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.5rem max(0.75rem, env(safe-area-inset-left, 0px));
     max-width: 600px;
     width: 100%;
     margin: 0 auto;
@@ -396,6 +396,8 @@ onUnmounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .timer-display {
@@ -409,6 +411,7 @@ onUnmounted(() => {
     font-size: 1rem;
     color: #374151;
     transition: all 0.3s ease;
+    min-height: 44px;
 }
 
 .timer-display.timer-warning {
@@ -443,6 +446,8 @@ onUnmounted(() => {
     font-size: 0.875rem;
     color: #6b7280;
     font-weight: 500;
+    margin-left: auto;
+    min-height: 44px;
 }
 
 .score-value {
@@ -499,7 +504,7 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 0.25rem;
-    padding: 0.375rem 0.75rem;
+    padding: 0.375rem 0.875rem;
     background: #f3f4f6;
     border: 1px solid #e5e7eb;
     border-radius: 1rem;
@@ -508,6 +513,8 @@ onUnmounted(() => {
     color: #4b5563;
     cursor: pointer;
     transition: all 0.2s ease;
+    min-height: 44px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .pause-button:hover {
@@ -523,6 +530,11 @@ onUnmounted(() => {
 
 .pause-button.paused:hover {
     background: #bbf7d0;
+}
+
+.pause-button:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, 0.28);
+    outline-offset: 2px;
 }
 
 .pause-icon {
@@ -632,6 +644,8 @@ onUnmounted(() => {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s;
+    min-height: 48px;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .next-button:hover {
@@ -650,8 +664,27 @@ onUnmounted(() => {
 
 @media (max-width: 640px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 1rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.25rem max(0.75rem, env(safe-area-inset-left, 0px));
         gap: 1rem;
+    }
+
+    .progress-header {
+        align-items: stretch;
+    }
+
+    .timer-display,
+    .pause-button,
+    .score-display {
+        flex: 1 1 calc(50% - 0.5rem);
+        justify-content: center;
+    }
+
+    .score-display {
+        order: 3;
+        flex: 1 1 100%;
+        margin-left: 0;
+        justify-content: flex-end;
+        padding-right: 0.125rem;
     }
 
     .next-button {
@@ -661,7 +694,7 @@ onUnmounted(() => {
     }
 
     .pause-button {
-        padding: 0.25rem 0.5rem;
+        padding: 0.25rem 0.625rem;
     }
 
     .pause-text {
@@ -678,6 +711,16 @@ onUnmounted(() => {
 
     .pause-title {
         font-size: 1.25rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .timer-display,
+    .pause-button,
+    .next-button,
+    .progress-fill,
+    .timer-fill {
+        transition: none;
     }
 }
 </style>

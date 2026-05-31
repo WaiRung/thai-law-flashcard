@@ -14,6 +14,7 @@
             <button
                 v-for="(choice, index) in question.choices"
                 :key="index"
+                type="button"
                 class="choice-button"
                 :class="{
                     'selected': selectedAnswer === choice,
@@ -23,6 +24,7 @@
                 }"
                 @click="selectChoice(choice)"
                 :disabled="isAnswered"
+                :aria-pressed="selectedAnswer === choice"
             >
                 <span class="choice-letter">{{ choiceLetters[index] }}</span>
                 <span class="choice-text">{{ choice }}</span>
@@ -113,6 +115,8 @@ const selectChoice = (choice: string) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1rem;
+    gap: 0.5rem;
+    flex-wrap: wrap;
 }
 
 .question-number {
@@ -127,6 +131,7 @@ const selectChoice = (choice: string) => {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 1rem;
     font-weight: 500;
+    white-space: nowrap;
 }
 
 .question-content {
@@ -148,17 +153,27 @@ const selectChoice = (choice: string) => {
     gap: 1rem;
     padding: 1rem 1.25rem;
     background: white;
-    border: 2px solid #e5e7eb;
+    border: 1px solid #dbe3ee;
     border-radius: 0.75rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     text-align: left;
     width: 100%;
+    min-height: 56px;
+    -webkit-tap-highlight-color: transparent;
 }
 
-.choice-button:hover:not(.disabled) {
-    border-color: #6366f1;
-    background: #f5f3ff;
+@media (hover: hover) {
+    .choice-button:hover:not(.disabled) {
+        border-color: #6366f1;
+        background: #f5f3ff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 9px rgba(99, 102, 241, 0.15);
+    }
 }
 
 .choice-button.selected:not(.correct):not(.incorrect) {
@@ -178,6 +193,11 @@ const selectChoice = (choice: string) => {
 
 .choice-button.disabled {
     cursor: default;
+}
+
+.choice-button:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, 0.25);
+    outline-offset: 2px;
 }
 
 .choice-letter {
@@ -209,6 +229,8 @@ const selectChoice = (choice: string) => {
     font-size: 1rem;
     color: #1f2937;
     font-weight: 500;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
 }
 
 .choice-icon {
@@ -302,12 +324,21 @@ const selectChoice = (choice: string) => {
         padding: 1.25rem;
     }
 
+    .question-header {
+        align-items: flex-start;
+    }
+
+    .question-number {
+        font-size: 0.8125rem;
+    }
+
     .question-content {
         font-size: 1rem;
     }
 
     .choice-button {
         padding: 0.875rem 1rem;
+        min-height: 52px;
     }
 
     .choice-letter {
@@ -318,6 +349,13 @@ const selectChoice = (choice: string) => {
 
     .choice-text {
         font-size: 0.875rem;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .choice-button,
+    .score-item {
+        transition: none;
     }
 }
 </style>
