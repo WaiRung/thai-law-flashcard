@@ -3,7 +3,7 @@
         <LoadingSpinner v-if="isLoading" message="กำลังโหลดหมวดหมู่..." />
         <template v-else>
             <!-- Warning Banner for Fallback -->
-            <div v-if="error && isUsingFallback" class="warning-banner">
+            <div v-if="error && isUsingFallback" class="warning-banner" role="status" aria-live="polite">
                 <span class="warning-icon">⚠️</span>
                 <span class="warning-text">{{ error }}</span>
             </div>
@@ -36,6 +36,7 @@ const filteredCounts = ref<Record<string, number>>({});
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const isUsingFallback = ref(false);
+let warningTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Use data manager composable
 const { loadCategories } = useDataManager();
@@ -57,6 +58,11 @@ const loadCategoriesData = async () => {
     error.value = null;
     isUsingFallback.value = false;
 
+    if (warningTimeout) {
+        clearTimeout(warningTimeout);
+        warningTimeout = null;
+    }
+
     try {
         // Use the composable to load categories
         const loadedCategories = await loadCategories();
@@ -70,8 +76,8 @@ const loadCategoriesData = async () => {
             isUsingFallback.value = true;
             error.value = "ไม่สามารถโหลดข้อมูลจาก API ได้ กำลังใช้ข้อมูลแบบออฟไลน์";
             
-            // Clear error after 5 seconds
-            setTimeout(() => {
+            // Clear fallback warning after a short delay to reduce visual noise.
+            warningTimeout = setTimeout(() => {
                 error.value = null;
             }, 5000);
         }
@@ -82,7 +88,7 @@ const loadCategoriesData = async () => {
         isUsingFallback.value = true;
         error.value = "ไม่สามารถโหลดข้อมูลจาก API ได้ กำลังใช้ข้อมูลแบบออฟไลน์";
         
-        setTimeout(() => {
+        warningTimeout = setTimeout(() => {
             error.value = null;
         }, 5000);
     } finally {
@@ -121,12 +127,21 @@ onMounted(async () => {
 
 // Reset header on unmount
 onUnmounted(() => {
+    if (warningTimeout) {
+        clearTimeout(warningTimeout);
+        warningTimeout = null;
+    }
+
     resetHeader();
 });
 </script>
 
 <style scoped>
 .main-content {
+    --category-warning-bg: #fef3c7;
+    --category-warning-border: #f59e0b;
+    --category-warning-ink: #78350f;
+
     flex: 1;
     padding: 1.5rem 1rem;
     max-width: 600px;
@@ -141,12 +156,12 @@ onUnmounted(() => {
     align-items: center;
     gap: 0.75rem;
     padding: 0.875rem 1rem;
-    background-color: #fef3c7;
-    border: 1px solid #fbbf24;
+    background-color: var(--category-warning-bg);
+    border: 1px solid var(--category-warning-border);
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
-    color: #92400e;
-    animation: slideIn 0.3s ease-out;
+    color: var(--category-warning-ink);
+    animation: slideIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 @keyframes slideIn {
@@ -167,8 +182,15 @@ onUnmounted(() => {
 
 .warning-text {
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
+    line-height: 1.5;
     flex: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .warning-banner {
+        animation: none;
+    }
 }
 
 @media (max-width: 640px) {
