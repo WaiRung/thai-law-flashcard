@@ -1,8 +1,9 @@
 <template>
-    <div class="datasource-container">
+    <div :class="['datasource-container', toneClass]">
         <div class="datasource-header">
             <h2 class="datasource-title">{{ categoryName }}</h2>
-            <p class="datasource-subtitle">เลือกแหล่งข้อมูล / Select Data Source</p>
+            <p class="datasource-subtitle">{{ resolvedSubtitle }}</p>
+            <p v-if="description" class="datasource-description">{{ description }}</p>
             <div v-if="dataSources.length > 0" class="datasource-summary" aria-label="Data source summary">
                 <p class="summary-pill">{{ dataSources.length }} แหล่งข้อมูล</p>
             </div>
@@ -40,6 +41,10 @@
                         </svg>
                     </div>
                 </div>
+
+                <div v-if="actionLabel" class="datasource-card-meta">
+                    <span class="datasource-action-label">{{ actionLabel }}</span>
+                </div>
             </button>
         </div>
 
@@ -51,14 +56,29 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import type { DataSource } from "../types/flashcard";
 
 interface Props {
     categoryName: string;
     dataSources: DataSource[];
+    subtitle?: string;
+    description?: string;
+    actionLabel?: string;
+    tone?: "blue" | "indigo";
 }
 
-defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    subtitle: "เลือกแหล่งข้อมูล / Select Data Source",
+    description: "",
+    actionLabel: "",
+    tone: "blue",
+});
+
+const resolvedSubtitle = computed(() => props.subtitle);
+const description = computed(() => props.description);
+const actionLabel = computed(() => props.actionLabel);
+const toneClass = computed(() => `datasource-container--${props.tone}`);
 
 const emit = defineEmits<{
     select: [dataSourceIndex: number];
@@ -89,6 +109,11 @@ const selectDataSource = (dataSourceIndex: number) => {
     margin: 0 auto;
 }
 
+.datasource-container--indigo {
+    --source-accent: #6366f1;
+    --source-focus: rgba(79, 70, 229, 0.22);
+}
+
 .datasource-header {
     text-align: center;
     margin-bottom: 1.25rem;
@@ -115,6 +140,14 @@ const selectDataSource = (dataSourceIndex: number) => {
     line-height: 1.6;
 }
 
+.datasource-description {
+    margin: 0.75rem auto 0;
+    max-width: 54ch;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--source-muted);
+}
+
 .datasource-summary {
     display: flex;
     justify-content: center;
@@ -128,9 +161,9 @@ const selectDataSource = (dataSourceIndex: number) => {
     min-height: 2rem;
     padding: 0.35rem 0.75rem;
     border-radius: 999px;
-    border: 1px solid rgba(59, 130, 246, 0.16);
-    background: rgba(59, 130, 246, 0.08);
-    color: #1d4ed8;
+    border: 1px solid color-mix(in srgb, var(--source-accent) 18%, white);
+    background: color-mix(in srgb, var(--source-accent) 8%, white);
+    color: color-mix(in srgb, var(--source-accent) 82%, black);
     font-size: 0.9rem;
     font-weight: 600;
     margin: 0;
@@ -157,6 +190,7 @@ const selectDataSource = (dataSourceIndex: number) => {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+    gap: 0.875rem;
     text-align: left;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     min-height: 0;
@@ -167,7 +201,7 @@ const selectDataSource = (dataSourceIndex: number) => {
 @media (hover: hover) {
     .datasource-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 14px rgba(59, 130, 246, 0.16);
+        box-shadow: 0 6px 14px color-mix(in srgb, var(--source-accent) 20%, transparent);
         border-color: var(--source-accent);
         background: var(--source-surface-soft);
     }
@@ -201,7 +235,7 @@ const selectDataSource = (dataSourceIndex: number) => {
     align-items: center;
     justify-content: center;
     border-radius: 0.875rem;
-    background: rgba(59, 130, 246, 0.08);
+    background: color-mix(in srgb, var(--source-accent) 8%, white);
     flex-shrink: 0;
 }
 
@@ -221,6 +255,26 @@ const selectDataSource = (dataSourceIndex: number) => {
     transition:
         transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
         color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.datasource-card-meta {
+    display: flex;
+    align-items: center;
+    margin-top: auto;
+}
+
+.datasource-action-label {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--source-accent) 18%, white);
+    background: color-mix(in srgb, var(--source-accent) 8%, white);
+    color: color-mix(in srgb, var(--source-accent) 82%, black);
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.2;
 }
 
 .datasource-name-th {
