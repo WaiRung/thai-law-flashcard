@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-05-31T00:00:00.000Z",
+  "title": "Design System: Thai Law",
+  "extensions": {
+    "colorMeta": {
+      "court-blue": {
+        "role": "primary",
+        "displayName": "Court Blue",
+        "canonical": "#3b82f6",
+        "tonalRamp": ["#0b1f3a", "#12305a", "#1a447e", "#245aa5", "#3b82f6", "#63a0ff", "#9ac2ff", "#d9e9ff"]
+      },
+      "statute-teal": {
+        "role": "primary",
+        "displayName": "Statute Teal",
+        "canonical": "#14b8a6",
+        "tonalRamp": ["#062823", "#0a3f38", "#0d5d53", "#118176", "#14b8a6", "#45d3c3", "#86e6db", "#d4f6f1"]
+      },
+      "quiz-indigo": {
+        "role": "secondary",
+        "displayName": "Quiz Indigo",
+        "canonical": "#6366f1",
+        "tonalRamp": ["#12153a", "#1e235a", "#2d3382", "#4048ad", "#6366f1", "#878bff", "#b5b8ff", "#e2e4ff"]
+      },
+      "success-green": {
+        "role": "tertiary",
+        "displayName": "Success Green",
+        "canonical": "#10b981",
+        "tonalRamp": ["#062819", "#0b3f28", "#0f5f3c", "#138453", "#10b981", "#4fd2a2", "#94e8c9", "#dcf8eb"]
+      },
+      "warning-amber": {
+        "role": "tertiary",
+        "displayName": "Warning Amber",
+        "canonical": "#f59e0b",
+        "tonalRamp": ["#362105", "#5a3607", "#83500a", "#b06f0b", "#f59e0b", "#ffbc4e", "#ffd998", "#fff0d7"]
+      },
+      "neutral-ink": {
+        "role": "neutral",
+        "displayName": "Legal Ink",
+        "canonical": "#1f2937",
+        "tonalRamp": ["#0f1318", "#1a222e", "#1f2937", "#374151", "#4b5563", "#6b7280", "#9ca3af", "#e5e7eb"]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Primary welcome and major screen headings."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section and screen titles in navigation-heavy views."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Card and block-level headings."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Thai-first reading content and supporting copy."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Compact hints, badges, and control metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "interactive-lift",
+        "value": "0 4px 12px rgba(59, 130, 246, 0.15)",
+        "purpose": "Hover elevation for selectable cards and menu items."
+      },
+      {
+        "name": "flashcard-depth",
+        "value": "0 10px 30px rgba(0, 0, 0, 0.2)",
+        "purpose": "Depth cue for card-flip surfaces."
+      },
+      {
+        "name": "result-focus",
+        "value": "0 10px 40px rgba(0, 0, 0, 0.1)",
+        "purpose": "Framing for quiz summary and result containers."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-standard",
+        "value": "cubic-bezier(0.4, 0, 0.2, 1)",
+        "purpose": "Default UI state transitions."
+      },
+      {
+        "name": "duration-fast",
+        "value": "200ms",
+        "purpose": "Button and card hover feedback."
+      },
+      {
+        "name": "duration-flip",
+        "value": "600ms",
+        "purpose": "Flashcard front-back transition."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Menu Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary full-width action used on study flow surfaces.",
+      "html": "<button class=\"ds-btn-primary\">Start Study Session</button>",
+      "css": ".ds-btn-primary { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; border: none; border-radius: 12px; padding: 16px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); } .ds-btn-primary:focus-visible { outline: 3px solid rgba(99, 102, 241, 0.45); outline-offset: 2px; } .ds-btn-primary:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Success Action Button",
+      "kind": "button",
+      "refersTo": "button-success",
+      "description": "Completion and submit action with confirmation color channel.",
+      "html": "<button class=\"ds-btn-success\">Submit Answers</button>",
+      "css": ".ds-btn-success { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; border: none; border-radius: 12px; padding: 16px 24px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-btn-success:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4); } .ds-btn-success:focus-visible { outline: 3px solid rgba(16, 185, 129, 0.45); outline-offset: 2px; } .ds-btn-success:active { transform: translateY(0); }"
+    },
+    {
+      "name": "Interactive Category Card",
+      "kind": "card",
+      "refersTo": "card-interactive",
+      "description": "Selectable list card used for category and section navigation.",
+      "html": "<article class=\"ds-card\"><div class=\"ds-card-icon\">📜</div><div class=\"ds-card-content\"><h3 class=\"ds-card-title\">รายการมาตรา</h3><p class=\"ds-card-desc\">ดูรายการมาตราทั้งหมด</p></div><span class=\"ds-card-arrow\" aria-hidden=\"true\">→</span></article>",
+      "css": ".ds-card { display: flex; align-items: center; gap: 16px; background: #ffffff; border: 2px solid #e5e7eb; border-radius: 16px; padding: 24px; color: #1f2937; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; transition: transform 200ms cubic-bezier(0.4, 0, 0.2, 1), border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-card:hover { transform: translateY(-2px); border-color: #3b82f6; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15); } .ds-card:focus-within { border-color: #2563eb; } .ds-card-icon { font-size: 2rem; line-height: 1; } .ds-card-content { flex: 1; } .ds-card-title { margin: 0 0 4px 0; font-size: 1.25rem; font-weight: 700; color: #1f2937; } .ds-card-desc { margin: 0; font-size: 0.95rem; color: #6b7280; } .ds-card-arrow { color: #9ca3af; font-size: 1.25rem; font-weight: 700; }"
+    },
+    {
+      "name": "Warning Banner",
+      "kind": "custom",
+      "refersTo": "card-default",
+      "description": "Non-blocking warning surface for offline fallback and caution states.",
+      "html": "<div class=\"ds-warning\" role=\"status\" aria-live=\"polite\"><span class=\"ds-warning-icon\">⚠️</span><p class=\"ds-warning-text\">ไม่สามารถโหลดข้อมูลจาก API ได้ กำลังใช้ข้อมูลแบบออฟไลน์</p></div>",
+      "css": ".ds-warning { display: flex; align-items: center; gap: 12px; background: #fef3c7; color: #92400e; border: 1px solid #fbbf24; border-radius: 8px; padding: 14px 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-warning-icon { font-size: 1.125rem; line-height: 1; } .ds-warning-text { margin: 0; font-size: 0.875rem; font-weight: 600; line-height: 1.4; }"
+    },
+    {
+      "name": "Flashcard Surface",
+      "kind": "custom",
+      "refersTo": "card-default",
+      "description": "Two-state learning card with clear front-back semantics.",
+      "html": "<section class=\"ds-flashcard\"><div class=\"ds-flashcard-label\">คำใบ้</div><p class=\"ds-flashcard-text\">ข้อเท็จจริงที่ใช้พิจารณาในคดีแพ่งคืออะไร</p><div class=\"ds-flashcard-hint\">แตะเพื่อดูคำตอบ</div></section>",
+      "css": ".ds-flashcard { background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%); color: #ffffff; border-radius: 16px; min-height: 280px; padding: 24px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); display: flex; flex-direction: column; justify-content: space-between; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-flashcard-label { font-size: 1rem; font-weight: 700; letter-spacing: 0.08em; opacity: 0.9; } .ds-flashcard-text { margin: 12px 0 0 0; font-size: 1.125rem; line-height: 1.6; font-weight: 500; } .ds-flashcard-hint { margin-top: 16px; font-size: 0.875rem; opacity: 0.75; font-style: italic; }"
+    },
+    {
+      "name": "Pill Status Chip",
+      "kind": "chip",
+      "refersTo": "card-default",
+      "description": "Compact metadata chip used for score and progress labels.",
+      "html": "<span class=\"ds-chip\">คะแนนล่าสุด 8/10</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; background: #f3f4f6; border: 1px solid #e5e7eb; color: #4b5563; border-radius: 9999px; padding: 6px 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 0.8125rem; font-weight: 600; line-height: 1.2; } .ds-chip:hover { border-color: #d1d5db; background: #e5e7eb; } .ds-chip:focus-visible { outline: 2px solid rgba(59, 130, 246, 0.35); outline-offset: 2px; }"
+    },
+    {
+      "name": "Search Input Field",
+      "kind": "input",
+      "refersTo": "input-default",
+      "description": "Neutral data-entry field for filtering sections and quiz content.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">ค้นหามาตรา</span><input class=\"ds-input\" type=\"text\" placeholder=\"พิมพ์คำค้นหา\" /></label>",
+      "css": ".ds-field { display: grid; gap: 8px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; } .ds-field-label { font-size: 0.875rem; font-weight: 700; color: #1f2937; } .ds-input { width: 100%; border: 1px solid #e5e7eb; border-radius: 8px; background: #f9fafb; color: #1f2937; font-size: 1rem; line-height: 1.4; padding: 12px 16px; transition: border-color 200ms cubic-bezier(0.4, 0, 0.2, 1), box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1); } .ds-input::placeholder { color: #6b7280; } .ds-input:hover { border-color: #d1d5db; } .ds-input:focus-visible { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Thai Law Study Console",
+    "overview": "Thai Law uses a calm, trustworthy, and task-forward interface where legal content remains the center of attention. Surfaces are clean and predictable, while accent gradients are reserved for actions and study milestones that need immediate recognition. This is a mobile-first study product, so controls are touch-sized, hierarchy is explicit, and text blocks prioritize Thai readability first.",
+    "keyCharacteristics": [
+      "Trust-first neutral structure with restrained accent usage.",
+      "Strong tap targets and card-based information grouping for mobile study flow.",
+      "Clear bilingual hierarchy with Thai content leading and English support secondary.",
+      "Gradient usage tied to state and action, never as ambient decoration."
+    ],
+    "rules": [
+      {
+        "name": "The One-Accent-Per-Surface Rule",
+        "body": "Any single screen region should emphasize one dominant accent family at a time.",
+        "section": "colors"
+      },
+      {
+        "name": "The Contrast-First Rule",
+        "body": "Body text must remain at or above AA contrast against its immediate background.",
+        "section": "colors"
+      },
+      {
+        "name": "The Thai-First Legibility Rule",
+        "body": "Thai reading blocks should never drop below 1rem at default viewport widths.",
+        "section": "typography"
+      },
+      {
+        "name": "The Stable Scale Rule",
+        "body": "Product UI uses fixed rem steps, not fluid display scaling.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat-at-Rest Rule",
+        "body": "Static containers remain visually calm. Elevation appears when an element becomes interactive, selected, or state-critical.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep primary reading text on Legal Ink (#1f2937) or stronger against light surfaces.",
+      "Do use 16px minimum tap-space padding on primary menu and answer controls.",
+      "Do reserve gradient intensity for interaction and progress moments.",
+      "Do keep Thai content first in hierarchy and maintain consistent bilingual pairing.",
+      "Do keep card radii and spacing tokens consistent across views."
+    ],
+    "donts": [
+      "Don't use neon color treatments or high-saturation glow effects that feel game-like.",
+      "Don't introduce generic AI template patterns such as repetitive lookalike card grids with decorative gradients.",
+      "Don't rely on left or right accent stripe borders above 1px for emphasis.",
+      "Don't use gradient text for headings or labels.",
+      "Don't reduce body contrast for aesthetic softness, legal-study screens require immediate legibility."
+    ]
+  }
+}
