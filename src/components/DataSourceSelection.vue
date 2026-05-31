@@ -31,6 +31,7 @@
                             viewBox="0 0 24 24"
                             stroke="currentColor"
                             class="datasource-arrow-icon"
+                            focusable="false"
                         >
                             <path
                                 stroke-linecap="round"
@@ -193,7 +194,7 @@ const selectDataSource = (dataSourceIndex: number) => {
     gap: 0.875rem;
     text-align: left;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    min-height: 0;
+    min-height: 88px;
     -webkit-tap-highlight-color: transparent;
     width: 100%;
 }
@@ -213,7 +214,8 @@ const selectDataSource = (dataSourceIndex: number) => {
 }
 
 .datasource-card:active {
-    transform: translateY(-2px);
+    transform: translateY(0);
+    background: var(--source-surface-soft);
 }
 
 .datasource-card:focus-visible {
