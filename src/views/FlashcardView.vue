@@ -325,11 +325,11 @@ const removeTouchListeners = () => {
 
 // Watch for category changes in route params
 watch(
-    () => [route.params.categoryId, route.params.dataSourceIndex],
-    async (
-        [newCategoryId, newDataSourceIndex]: [unknown, unknown],
-        [oldCategoryId, oldDataSourceIndex]: [unknown, unknown],
-    ) => {
+    [
+        () => route.params.categoryId,
+        () => route.params.dataSourceIndex,
+    ],
+    async ([newCategoryId, newDataSourceIndex], [oldCategoryId, oldDataSourceIndex]) => {
         if (
             categories.value.length > 0
             && newCategoryId

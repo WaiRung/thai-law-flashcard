@@ -40,7 +40,6 @@
               <img 
                 v-else
                 :key="imageRenderKey"
-                ref="imageElement"
                 :src="imageUrl" 
                 :alt="title" 
                 class="fullscreen-image"
@@ -84,7 +83,6 @@ const MAX_SCALE = 5;
 const isImageLoading = ref(true);
 const imageError = ref("");
 const imageRenderKey = ref(0);
-const imageElement = ref<HTMLImageElement | null>(null);
 
 // Touch and zoom state
 const scale = ref(1);
