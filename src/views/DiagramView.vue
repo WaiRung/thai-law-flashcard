@@ -2,61 +2,73 @@
     <main class="main-content">
         <div class="diagram-container">
             <div class="header-section">
-                <h2 class="page-title">Diagrams</h2>
-                <p class="page-subtitle">Diagrams</p>
+                <h1 class="page-title">Diagrams</h1>
+                <p class="page-subtitle">
+                    แผนภาพประกอบการทบทวนกฎหมาย เรียกดูได้ทันทีทั้งภาษาไทยและอังกฤษ
+                </p>
+                <div v-if="diagramCategories.length > 0" class="summary-row" aria-label="Diagram summary">
+                    <p class="summary-pill">{{ diagramCategories.length }} หมวดหมู่</p>
+                    <p class="summary-pill">{{ totalDiagramCount }} แผนภาพ</p>
+                </div>
             </div>
 
             <div v-if="diagramCategories.length === 0" class="empty-state">
-                <p class="empty-message">ไม่มี Diagrams ในขณะนี้</p>
-                <p class="empty-submessage">No diagrams available at the moment</p>
+                <p class="empty-message">ยังไม่มีแผนภาพในระบบ</p>
+                <p class="empty-submessage">No diagrams are available right now.</p>
             </div>
 
             <div v-else class="categories-list">
-                <div
+                <section
                     v-for="category in diagramCategories"
                     :key="category.categoryId"
                     class="category-section"
                 >
                     <div class="category-header">
-                        <h3 class="category-title">{{ category.nameTh }}</h3>
-                        <p class="category-subtitle">{{ category.nameEn }}</p>
+                        <div>
+                            <h2 class="category-title">{{ category.nameTh }}</h2>
+                            <p class="category-subtitle">{{ category.nameEn }}</p>
+                        </div>
+                        <p class="category-count">{{ category.images.length }} ภาพ</p>
                     </div>
 
-                    <div v-if="category.images.length === 0" class="no-images">
-                        <p class="no-images-text">ไม่มีไ Diagrams ในหมวดนี้</p>
-                    </div>
-
-                    <div v-else class="images-grid">
-                        <div
-                            v-for="(image, index) in category.images"
-                            :key="index"
-                            class="image-card"
-                        >
-                            <div class="image-wrapper" @click="openImageModal(category, image)">
-                                <div v-if="isImageLoading(category.categoryId, index)" class="loading-overlay">
-                                    <div class="spinner"></div>
-                                    <p class="loading-text">กำลังโหลด...</p>
+                    <div class="images-grid">
+                        <article v-for="(image, index) in category.images" :key="index" class="image-card">
+                            <button
+                                type="button"
+                                class="image-trigger"
+                                @click="openImageModal(category, image)"
+                                :aria-label="`เปิดภาพ ${image.nameTh} แบบเต็มหน้าจอ`"
+                            >
+                                <div class="image-wrapper">
+                                    <div
+                                        v-if="isImageLoading(category.categoryId, index)"
+                                        class="loading-overlay"
+                                        role="status"
+                                        aria-live="polite"
+                                    >
+                                        <div class="spinner"></div>
+                                        <p class="loading-text">กำลังโหลด...</p>
+                                    </div>
+                                    <img
+                                        :src="getImageUrlSync(category.categoryId, image.filename)"
+                                        :alt="getImageAlt(image)"
+                                        class="diagram-image"
+                                        :class="{ 'image-loaded': !isImageLoading(category.categoryId, index) }"
+                                        @load="handleImageLoad($event, category.categoryId, index)"
+                                        @error="handleImageError($event, category.categoryId, index)"
+                                    />
                                 </div>
-                                <img
-                                    :src="getImageUrlSync(category.categoryId, image.filename)"
-                                    :alt="image.nameTh"
-                                    class="diagram-image"
-                                    :class="{ 'image-loaded': !isImageLoading(category.categoryId, index) }"
-                                    @load="handleImageLoad($event, category.categoryId, index)"
-                                    @error="handleImageError($event, category.categoryId, index)"
-                                />
-                            </div>
+                            </button>
                             <div class="image-info">
                                 <p class="image-title">{{ image.nameTh }}</p>
-                                <p class="image-subtitle">{{ image.nameEn }}</p>
+                                <p class="image-subtitle">{{ image.nameEn || "English title unavailable" }}</p>
                             </div>
-                        </div>
+                        </article>
                     </div>
-                </div>
+                </section>
             </div>
         </div>
 
-        <!-- Image Modal -->
         <ImageModal
             :is-open="isModalOpen"
             :image-url="selectedImage.url"
@@ -68,11 +80,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { computed, onMounted, ref } from "vue";
 import diagramsConfig from "../config/diagrams.json";
 import ImageModal from "../components/ImageModal.vue";
 import { getCachedDiagramImage } from "../services/diagramService";
-import type { DiagramImage, DiagramCategory } from "../types/diagram";
+import type { DiagramCategory, DiagramImage } from "../types/diagram";
 
 interface ImageLoadingState {
     [key: string]: boolean;
@@ -82,8 +94,7 @@ interface ImageUrlCache {
     [key: string]: string;
 }
 
-// Constant for loading behavior
-const SPINNER_MIN_DISPLAY_TIME = 100; // Minimum time to show spinner to prevent flashing
+const SPINNER_MIN_DISPLAY_TIME = 100;
 
 const diagramCategories = ref<DiagramCategory[]>([]);
 const baseUrl = diagramsConfig.baseUrl;
@@ -96,91 +107,71 @@ const selectedImage = ref({
     subtitle: ""
 });
 
-// Fallback image SVG for when images fail to load
+const totalDiagramCount = computed(() => {
+    return diagramCategories.value.reduce((total: number, category: DiagramCategory) => {
+        return total + category.images.length;
+    }, 0);
+});
+
 const FALLBACK_IMAGE_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='300'%3E%3Crect width='400' height='300' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%236b7280' text-anchor='middle' dominant-baseline='middle'%3EImage not available%3C/text%3E%3C/svg%3E";
 
-/**
- * Generate unique key for image loading state
- */
 const getImageKey = (categoryId: string, imageIndex: number): string => {
     return `${categoryId}-${imageIndex}`;
 };
 
-/**
- * Check if an image is currently loading
- */
 const isImageLoading = (categoryId: string, imageIndex: number): boolean => {
     const key = getImageKey(categoryId, imageIndex);
     return imageLoadingStates.value[key] ?? true;
 };
 
-/**
- * Generate cache key for image URL cache
- */
 const getCacheKey = (categoryId: string, filename: string): string => {
     return `${categoryId}-${filename}`;
 };
 
-/**
- * Get the full URL for an image
- * First checks cache for Base64 data, falls back to remote URL
- */
 const getImageUrl = async (categoryId: string, categoryPath: string, filename: string): Promise<string> => {
     const key = getCacheKey(categoryId, filename);
-    
-    // Return from URL cache if already loaded
+
     if (imageUrlCache.value[key]) {
         return imageUrlCache.value[key];
     }
-    
-    // Try to get cached image first
+
     const cachedImage = await getCachedDiagramImage(categoryId, filename);
     if (cachedImage) {
         imageUrlCache.value[key] = cachedImage;
         return cachedImage;
     }
-    
-    // Fall back to remote URL
+
     const remoteUrl = `${baseUrl}/${categoryPath}/${filename}`;
     imageUrlCache.value[key] = remoteUrl;
     return remoteUrl;
 };
 
-/**
- * Get image URL synchronously from cache
- */
 const getImageUrlSync = (categoryId: string, filename: string): string => {
     const key = getCacheKey(categoryId, filename);
     return imageUrlCache.value[key] || FALLBACK_IMAGE_SVG;
 };
 
-/**
- * Handle image loading success
- * Uses decode() to ensure the image is fully decoded before hiding the spinner
- */
+const getImageAlt = (image: DiagramImage): string => {
+    if (image.nameTh && image.nameEn) {
+        return `${image.nameTh} (${image.nameEn})`;
+    }
+
+    return image.nameTh || image.nameEn || "Diagram image";
+};
+
 const handleImageLoad = async (event: Event, categoryId: string, imageIndex: number) => {
     const img = event.target as HTMLImageElement;
     const key = getImageKey(categoryId, imageIndex);
-    
+
     try {
-        // Wait for the image to be fully decoded
-        // This ensures large images are completely ready before removing the spinner
         await img.decode();
-        
-        // Add a small delay to prevent spinner flash for very fast loads
-        await new Promise(resolve => setTimeout(resolve, SPINNER_MIN_DISPLAY_TIME));
-        
+        await new Promise((resolve) => setTimeout(resolve, SPINNER_MIN_DISPLAY_TIME));
         imageLoadingStates.value[key] = false;
-    } catch (error) {
-        // If decode fails, still hide the spinner
-        console.error('Image decode error:', error);
+    } catch {
         imageLoadingStates.value[key] = false;
     }
 };
 
-/**
- * Handle image loading errors
- */
 const handleImageError = (event: Event, categoryId: string, imageIndex: number) => {
     const img = event.target as HTMLImageElement;
     img.src = FALLBACK_IMAGE_SVG;
@@ -188,9 +179,6 @@ const handleImageError = (event: Event, categoryId: string, imageIndex: number) 
     imageLoadingStates.value[key] = false;
 };
 
-/**
- * Open image in fullscreen modal
- */
 const openImageModal = async (category: DiagramCategory, image: DiagramImage) => {
     selectedImage.value = {
         url: await getImageUrl(category.categoryId, category.categoryPath, image.filename),
@@ -200,40 +188,25 @@ const openImageModal = async (category: DiagramCategory, image: DiagramImage) =>
     isModalOpen.value = true;
 };
 
-/**
- * Close the image modal
- */
 const closeImageModal = () => {
     isModalOpen.value = false;
 };
 
-/**
- * Load diagram categories and initialize loading states
- */
 const loadDiagrams = async () => {
-    // Filter categories that have images
-    diagramCategories.value = diagramsConfig.diagrams.filter(
-        (category) => category.images.length > 0
-    );
+    diagramCategories.value = diagramsConfig.diagrams.filter((category) => category.images.length > 0);
 
-    // Collect all image preload promises for parallel execution
     const preloadPromises: Promise<unknown>[] = [];
-    
-    // Initialize loading states and collect preload promises
+
     for (const category of diagramCategories.value) {
         for (let index = 0; index < category.images.length; index++) {
             const key = getImageKey(category.categoryId, index);
             imageLoadingStates.value[key] = true;
-            
-            // Add preload promise for parallel execution (called for side effects)
+
             const image = category.images[index];
-            preloadPromises.push(
-                getImageUrl(category.categoryId, category.categoryPath, image.filename)
-            );
+            preloadPromises.push(getImageUrl(category.categoryId, category.categoryPath, image.filename));
         }
     }
-    
-    // Preload all image URLs in parallel
+
     await Promise.all(preloadPromises);
 };
 
@@ -244,9 +217,19 @@ onMounted(async () => {
 
 <style scoped>
 .main-content {
+    --diagram-ink: #1f2937;
+    --diagram-body: #4b5563;
+    --diagram-muted: #6b7280;
+    --diagram-border: #e5e7eb;
+    --diagram-surface: #ffffff;
+    --diagram-surface-soft: #f9fafb;
+    --diagram-accent: #3b82f6;
+    --diagram-accent-deep: #2563eb;
+    --diagram-focus: rgba(37, 99, 235, 0.24);
+
     flex: 1;
-    padding: 1.5rem 1rem;
-    max-width: 1200px;
+    padding: 1.5rem 1rem 2rem;
+    max-width: 1120px;
     width: 100%;
     margin: 0 auto;
     display: flex;
@@ -261,131 +244,179 @@ onMounted(async () => {
 
 .header-section {
     text-align: center;
-    padding: 1rem 0 2rem;
+    padding: 1.25rem 1rem 1.75rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(229, 231, 235, 0.82);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.75) 0%, rgba(243, 244, 246, 0.72) 100%);
 }
 
 .page-title {
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 3.8vw, 2.5rem);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--diagram-ink);
     margin: 0 0 0.5rem 0;
 }
 
 .page-subtitle {
     font-size: 1.125rem;
-    color: #6b7280;
+    color: var(--diagram-body);
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 62ch;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.summary-pill {
     margin: 0;
+    padding: 0.375rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(59, 130, 246, 0.28);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--diagram-accent-deep);
+    font-size: 0.875rem;
+    font-weight: 600;
 }
 
 .empty-state {
     text-align: center;
     padding: 3rem 1rem;
-    background: white;
+    background: var(--diagram-surface);
     border-radius: 1rem;
-    border: 2px solid #e5e7eb;
+    border: 1px solid var(--diagram-border);
 }
 
 .empty-message {
     font-size: 1.25rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--diagram-ink);
     margin: 0 0 0.5rem 0;
 }
 
 .empty-submessage {
     font-size: 1rem;
-    color: #6b7280;
+    color: var(--diagram-body);
     margin: 0;
 }
 
 .categories-list {
     display: flex;
     flex-direction: column;
-    gap: 3rem;
+    gap: 2rem;
 }
 
 .category-section {
-    background: white;
+    background: var(--diagram-surface);
     border-radius: 1rem;
     padding: 2rem;
-    border: 2px solid #e5e7eb;
+    border: 1px solid var(--diagram-border);
 }
 
 .category-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 1rem;
     margin-bottom: 1.5rem;
     padding-bottom: 1rem;
-    border-bottom: 2px solid #e5e7eb;
+    border-bottom: 1px solid var(--diagram-border);
 }
 
 .category-title {
-    font-size: 1.75rem;
+    font-size: clamp(1.5rem, 2.3vw, 1.875rem);
     font-weight: 700;
-    color: #1f2937;
+    color: var(--diagram-ink);
     margin: 0 0 0.25rem 0;
 }
 
 .category-subtitle {
     font-size: 1rem;
-    color: #6b7280;
+    color: var(--diagram-body);
     margin: 0;
 }
 
-.no-images {
-    text-align: center;
-    padding: 2rem 1rem;
-}
-
-.no-images-text {
-    font-size: 1rem;
-    color: #9ca3af;
+.category-count {
     margin: 0;
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    border: 1px solid rgba(59, 130, 246, 0.24);
+    color: var(--diagram-accent-deep);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    white-space: nowrap;
+    align-self: center;
 }
 
 .images-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
 }
 
 .image-card {
     display: flex;
     flex-direction: column;
-    background: #f9fafb;
-    border-radius: 0.75rem;
+    background: var(--diagram-surface-soft);
+    border-radius: 0.875rem;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
-    transition: all 0.2s;
+    border: 1px solid var(--diagram-border);
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .image-card:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 6px 16px rgba(59, 130, 246, 0.14);
+}
+
+.image-card:focus-within {
+    border-color: var(--diagram-accent);
+    box-shadow: 0 0 0 3px var(--diagram-focus);
+}
+
+.image-trigger {
+    border: none;
+    padding: 0;
+    margin: 0;
+    background: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+}
+
+.image-trigger:focus-visible {
+    outline: none;
 }
 
 .image-wrapper {
     width: 100%;
-    height: 250px;
+    height: 220px;
     overflow: hidden;
-    background: white;
+    background: var(--diagram-surface);
     display: flex;
     align-items: center;
     justify-content: center;
     position: relative;
-    cursor: pointer;
-    transition: opacity 0.2s;
+    transition: opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.image-wrapper:hover {
+.image-trigger:hover .image-wrapper {
     opacity: 0.9;
 }
 
 .loading-overlay {
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: white;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.94);
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -397,8 +428,8 @@ onMounted(async () => {
 .spinner {
     width: 2.5rem;
     height: 2.5rem;
-    border: 3px solid #e5e7eb;
-    border-top-color: #3b82f6;
+    border: 3px solid var(--diagram-border);
+    border-top-color: var(--diagram-accent);
     border-radius: 50%;
     animation: spin 1s linear infinite;
 }
@@ -411,7 +442,7 @@ onMounted(async () => {
 
 .loading-text {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--diagram-muted);
     margin: 0;
 }
 
@@ -421,7 +452,7 @@ onMounted(async () => {
     object-fit: contain;
     padding: 1rem;
     opacity: 0;
-    transition: opacity 0.3s ease-in-out;
+    transition: opacity 0.22s ease-out;
 }
 
 .diagram-image.image-loaded {
@@ -429,29 +460,42 @@ onMounted(async () => {
 }
 
 .image-info {
-    padding: 1rem;
+    padding: 0.9rem 1rem 1rem;
+    border-top: 1px solid rgba(229, 231, 235, 0.72);
 }
 
 .image-title {
     font-size: 1rem;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--diagram-ink);
     margin: 0 0 0.25rem 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.8em;
 }
 
 .image-subtitle {
     font-size: 0.875rem;
-    color: #6b7280;
+    color: var(--diagram-body);
     margin: 0;
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.6em;
 }
 
 @media (max-width: 768px) {
     .main-content {
-        padding: 1rem 0.75rem;
+        padding: 1rem 0.75rem 1.5rem;
     }
 
     .header-section {
-        padding: 0.5rem 0 1.5rem;
+        padding: 1rem 0.75rem 1.25rem;
     }
 
     .page-title {
@@ -467,11 +511,15 @@ onMounted(async () => {
     }
 
     .category-title {
-        font-size: 1.5rem;
+        font-size: 1.4rem;
     }
 
     .images-grid {
         grid-template-columns: 1fr;
+    }
+
+    .category-header {
+        align-items: center;
     }
 
     .image-wrapper {
@@ -490,6 +538,26 @@ onMounted(async () => {
 
     .category-section {
         padding: 1rem;
+    }
+
+    .category-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .category-count {
+        align-self: flex-start;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .image-card,
+    .image-wrapper,
+    .diagram-image,
+    .spinner {
+        transition: none !important;
+        animation: none !important;
+        transform: none !important;
     }
 }
 </style>
