@@ -16,7 +16,7 @@
             />
 
             <div class="menu-items">
-                <button @click="navigateToSections" class="menu-item">
+                <button type="button" @click="navigateToSections" class="menu-item">
                     <div class="menu-item-icon">📜</div>
                     <div class="menu-item-content">
                         <h3 class="menu-item-title">รายการมาตรา</h3>
@@ -40,7 +40,7 @@
                     </div>
                 </button>
 
-                <button @click="navigateToQuizLaw" class="menu-item">
+                <button type="button" @click="navigateToQuizLaw" class="menu-item">
                     <div class="menu-item-icon">🎯</div>
                     <div class="menu-item-content">
                         <h3 class="menu-item-title">QuizLaw</h3>
@@ -64,7 +64,7 @@
                     </div>
                 </button>
 
-                <button @click="navigateToFlashcards" class="menu-item">
+                <button type="button" @click="navigateToFlashcards" class="menu-item">
                     <div class="menu-item-icon">🎴</div>
                     <div class="menu-item-content">
                         <h3 class="menu-item-title">Flashcards</h3>
@@ -88,7 +88,7 @@
                     </div>
                 </button>
 
-                <button @click="navigateToDiagrams" class="menu-item">
+                <button type="button" @click="navigateToDiagrams" class="menu-item">
                     <div class="menu-item-icon">📊</div>
                     <div class="menu-item-content">
                         <h3 class="menu-item-title">Diagrams</h3>
@@ -112,7 +112,7 @@
                     </div>
                 </button>
 
-                <button @click="navigateToDocuments" class="menu-item">
+                <button type="button" @click="navigateToDocuments" class="menu-item">
                     <div class="menu-item-icon">📄</div>
                     <div class="menu-item-content">
                         <h3 class="menu-item-title">Documents</h3>
@@ -191,6 +191,16 @@ onMounted(async () => {
 
 <style scoped>
 .main-content {
+    --menu-ink: #1f2937;
+    --menu-body: #4b5563;
+    --menu-muted: #6b7280;
+    --menu-border: #e5e7eb;
+    --menu-surface: #ffffff;
+    --menu-surface-soft: #f9fafb;
+    --menu-accent: #3b82f6;
+    --menu-accent-deep: #2563eb;
+    --menu-focus: rgba(59, 130, 246, 0.26);
+
     flex: 1;
     padding: 1.5rem 1rem;
     max-width: 600px;
@@ -203,25 +213,33 @@ onMounted(async () => {
 .menu-container {
     display: flex;
     flex-direction: column;
-    gap: 2rem;
+    gap: 1.5rem;
 }
 
 .welcome-section {
+    border-radius: 1rem;
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.65) 0%, rgba(243, 244, 246, 0.7) 100%);
+    border: 1px solid rgba(229, 231, 235, 0.85);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     text-align: center;
-    padding: 2rem 1rem;
+    padding: 1.5rem 1rem;
 }
 
 .welcome-title {
     font-size: 2.5rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--menu-ink);
     margin: 0 0 0.5rem 0;
 }
 
 .welcome-subtitle {
     font-size: 1.125rem;
-    color: #6b7280;
-    margin: 0;
+    color: var(--menu-body);
+    line-height: 1.6;
+    margin: 0 auto;
+    max-width: 44ch;
+    overflow-wrap: anywhere;
 }
 
 .menu-items {
@@ -235,24 +253,58 @@ onMounted(async () => {
     align-items: center;
     gap: 1rem;
     padding: 1.5rem;
-    background: white;
-    border: 2px solid #e5e7eb;
+    background: var(--menu-surface);
+    border: 2px solid var(--menu-border);
     border-radius: 1rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     text-align: left;
     width: 100%;
+    min-height: 88px;
+    -webkit-tap-highlight-color: transparent;
+    animation: menuItemEnter 0.32s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
 .menu-item:hover {
-    background: #f9fafb;
-    border-color: #3b82f6;
+    background: var(--menu-surface-soft);
+    border-color: var(--menu-accent);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
 }
 
 .menu-item:active {
     transform: translateY(0);
+}
+
+.menu-item:focus-visible {
+    outline: 3px solid var(--menu-focus);
+    outline-offset: 2px;
+    border-color: var(--menu-accent-deep);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+}
+
+.menu-item:nth-child(1) {
+    animation-delay: 0.04s;
+}
+
+.menu-item:nth-child(2) {
+    animation-delay: 0.08s;
+}
+
+.menu-item:nth-child(3) {
+    animation-delay: 0.12s;
+}
+
+.menu-item:nth-child(4) {
+    animation-delay: 0.16s;
+}
+
+.menu-item:nth-child(5) {
+    animation-delay: 0.2s;
 }
 
 .menu-item-icon {
@@ -267,14 +319,18 @@ onMounted(async () => {
 .menu-item-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--menu-ink);
     margin: 0 0 0.25rem 0;
+    line-height: 1.3;
+    overflow-wrap: anywhere;
 }
 
 .menu-item-description {
     font-size: 1rem;
-    color: #6b7280;
+    color: var(--menu-body);
+    line-height: 1.5;
     margin: 0;
+    overflow-wrap: anywhere;
 }
 
 .menu-item-arrow {
@@ -285,12 +341,52 @@ onMounted(async () => {
     width: 1.5rem;
     height: 1.5rem;
     color: #9ca3af;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .menu-item:hover .arrow-icon {
-    color: #3b82f6;
+    color: var(--menu-accent);
     transform: translateX(4px);
+}
+
+.menu-item:hover .menu-item-icon {
+    transform: translateY(-1px);
+}
+
+.menu-item-icon {
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes menuItemEnter {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .menu-item,
+    .menu-item-icon,
+    .arrow-icon {
+        animation: none;
+        transition: none;
+    }
+
+    .menu-item:hover,
+    .menu-item:active {
+        transform: none;
+    }
+
+    .menu-item:hover .arrow-icon,
+    .menu-item:hover .menu-item-icon {
+        transform: none;
+    }
 }
 
 @media (max-width: 640px) {
@@ -299,7 +395,7 @@ onMounted(async () => {
     }
 
     .welcome-section {
-        padding: 1.5rem 0.5rem;
+        padding: 1.25rem 0.75rem;
     }
 
     .welcome-title {

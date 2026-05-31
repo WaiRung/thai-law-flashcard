@@ -23,6 +23,7 @@
             </div>
             <div class="cache-actions">
                 <button
+                    type="button"
                     @click="handleReload"
                     :disabled="isDownloading"
                     class="cache-btn reload-btn"
@@ -32,7 +33,7 @@
                 </button>
             </div>
             <!-- Success message -->
-            <div v-if="downloadSuccess" class="success-message">
+            <div v-if="downloadSuccess" class="success-message" role="status" aria-live="polite">
                 ✅ โหลดข้อมูลใหม่สำเร็จ!
             </div>
         </div>
@@ -49,6 +50,7 @@
             </p>
             <div class="cache-actions">
                 <button
+                    type="button"
                     @click="handleReload"
                     :disabled="isDownloading"
                     class="cache-btn download-btn"
@@ -85,15 +87,15 @@ const handleReload = () => {
 <style scoped>
 /* Cache Status Section Styles */
 .cache-status-section {
-    margin-bottom: 1.5rem;
+    margin-bottom: 0;
 }
 
 .cache-info {
     background: white;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     padding: 1.25rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border: 2px solid #e5e7eb;
 }
 
 .cache-header {
@@ -115,6 +117,7 @@ const handleReload = () => {
     color: #1f2937;
     margin: 0;
     flex-grow: 1;
+    line-height: 1.3;
 }
 
 .cache-badge {
@@ -137,7 +140,7 @@ const handleReload = () => {
 
 .cache-details {
     margin-bottom: 1rem;
-    padding: 0.75rem;
+    padding: 0.875rem;
     background-color: #f9fafb;
     border-radius: 0.5rem;
 }
@@ -151,7 +154,7 @@ const handleReload = () => {
 }
 
 .detail-label {
-    color: #6b7280;
+    color: #4b5563;
     font-weight: 500;
 }
 
@@ -162,8 +165,8 @@ const handleReload = () => {
 
 .cache-description {
     margin: 0 0 1rem 0;
-    color: #6b7280;
-    font-size: 0.875rem;
+    color: #4b5563;
+    font-size: 0.9375rem;
     line-height: 1.5;
 }
 
@@ -176,13 +179,17 @@ const handleReload = () => {
 .cache-btn {
     flex: 1;
     min-width: 140px;
+    min-height: 44px;
     padding: 0.75rem 1rem;
     border: none;
     border-radius: 0.5rem;
     font-size: 0.875rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        opacity 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     color: white;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
@@ -200,6 +207,11 @@ const handleReload = () => {
     opacity: 0.6;
     cursor: not-allowed;
     transform: none;
+}
+
+.cache-btn:focus-visible {
+    outline: 3px solid rgba(59, 130, 246, 0.26);
+    outline-offset: 2px;
 }
 
 .reload-btn {
@@ -270,6 +282,19 @@ const handleReload = () => {
     .cache-btn {
         width: 100%;
         min-width: auto;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cache-btn,
+    .success-message {
+        transition: none;
+        animation: none;
+    }
+
+    .cache-btn:hover:not(:disabled),
+    .cache-btn:active:not(:disabled) {
+        transform: none;
     }
 }
 </style>
