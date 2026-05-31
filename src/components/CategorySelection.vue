@@ -1,11 +1,19 @@
 <template>
     <div class="category-container">
         <div class="category-header">
-            <h2 class="category-title">เลือกหมวดกฎหมาย</h2>
-            <p class="category-subtitle">Select Law Category</p>
+            <h2 class="category-title">{{ title }}</h2>
+            <p class="category-subtitle">{{ subtitle }}</p>
+            <p v-if="description" class="category-description">{{ description }}</p>
+            <div v-if="categories.length > 0" class="category-summary" aria-label="Category summary">
+                <p class="summary-pill">{{ categories.length }} หมวดหมู่</p>
+                <p class="summary-pill">{{ totalQuestions }} คำถาม</p>
+                <p v-if="completedCategories > 0" class="summary-pill summary-pill-score">
+                    {{ completedCategories }} หมวดมีสถิติ
+                </p>
+            </div>
         </div>
 
-        <div class="category-grid">
+        <div v-if="categories.length > 0" class="category-grid">
             <button
                 v-for="category in categories"
                 :key="category.id"
@@ -14,22 +22,49 @@
                 class="category-card"
                 :aria-label="`เลือกหมวด ${category.nameTh} (${category.nameEn}) จำนวน ${category.count} คำถาม`"
             >
-                <div class="category-icon">{{ category.icon }}</div>
-                <div class="category-name-th">{{ category.nameTh }}</div>
-                <div class="category-name-en">{{ category.nameEn }}</div>
-                <div class="category-count">{{ category.count }} คำถาม</div>
-                
-                <!-- High Score Display -->
-                <div v-if="getHighScore(category.id)" class="category-high-score">
-                    <span class="high-score-icon">🏆</span>
-                    <span class="high-score-text">{{ getHighScore(category.id)?.percentage }}%</span>
+                <div class="category-card-main">
+                    <div class="category-icon" aria-hidden="true">{{ category.icon }}</div>
+                    <div class="category-copy">
+                        <div class="category-name-th">{{ category.nameTh }}</div>
+                        <div class="category-name-en">{{ category.nameEn }}</div>
+                    </div>
+                    <div class="category-arrow" aria-hidden="true">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                            class="category-arrow-icon"
+                        >
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M9 5l7 7-7 7"
+                            />
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="category-meta">
+                    <div class="category-count">{{ category.count }} คำถาม</div>
+                    <div v-if="getHighScore(category.id)" class="category-high-score">
+                        <span class="high-score-icon" aria-hidden="true">🏆</span>
+                        <span class="high-score-text">คะแนนสูงสุด {{ getHighScore(category.id)?.percentage }}%</span>
+                    </div>
                 </div>
             </button>
+        </div>
+
+        <div v-else class="category-empty-state">
+            <p class="empty-title">ยังไม่พบหมวดหมู่สำหรับการทบทวน</p>
+            <p class="empty-subtitle">No law categories are available right now.</p>
         </div>
     </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from "vue";
 import type { HighScore } from "../types/quiz";
 
 interface Category {
@@ -43,9 +78,26 @@ interface Category {
 interface Props {
     categories: Category[];
     highScores?: Map<string, HighScore>;
+    title?: string;
+    subtitle?: string;
+    description?: string;
 }
 
 const props = defineProps<Props>();
+
+const title = computed(() => props.title ?? "เลือกหมวดกฎหมาย");
+const subtitle = computed(() => props.subtitle ?? "Select law category");
+const description = computed(() => {
+    return props.description ?? "เลือกหมวดที่ต้องการทบทวนเพื่อเริ่มทำแบบฝึกแบบต่อเนื่อง";
+});
+
+const totalQuestions = computed(() => {
+    return props.categories.reduce((total: number, category: Category) => total + category.count, 0);
+});
+
+const completedCategories = computed(() => {
+    return props.categories.filter((category: Category) => props.highScores?.has(category.id)).length;
+});
 
 const emit = defineEmits<{
     select: [categoryId: string];
@@ -74,18 +126,22 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
 
     display: flex;
     flex-direction: column;
-    padding: 0.5rem 0;
+    gap: 1.5rem;
+    padding: 0.25rem 0;
     max-width: 100%;
     margin: 0 auto;
 }
 
 .category-header {
     text-align: center;
-    margin-bottom: 1.75rem;
+    padding: 1.25rem 1rem 1.5rem;
+    border-radius: 1rem;
+    border: 1px solid rgba(229, 231, 235, 0.82);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(243, 244, 246, 0.92) 100%);
 }
 
 .category-title {
-    font-size: 1.875rem;
+    font-size: clamp(1.75rem, 3.8vw, 2.25rem);
     font-weight: 700;
     color: var(--category-ink);
     margin: 0;
@@ -101,6 +157,42 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
     line-height: 1.6;
 }
 
+.category-description {
+    margin: 0.75rem auto 0;
+    max-width: 54ch;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--category-muted);
+}
+
+.category-summary {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+.summary-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 2rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    border: 1px solid rgba(59, 130, 246, 0.16);
+    background: rgba(59, 130, 246, 0.08);
+    color: var(--category-accent-deep);
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.summary-pill-score {
+    border-color: rgba(245, 158, 11, 0.22);
+    background: rgba(245, 158, 11, 0.12);
+    color: #92400e;
+}
+
 .category-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -110,7 +202,7 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
 
 .category-card {
     background: var(--category-surface);
-    border: 2px solid var(--category-border);
+    border: 1px solid var(--category-border);
     border-radius: 1rem;
     padding: 1.5rem 1.25rem;
     cursor: pointer;
@@ -121,73 +213,97 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
         background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
     display: flex;
     flex-direction: column;
-    align-items: center;
-    text-align: center;
-    min-height: 200px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    align-items: stretch;
+    text-align: left;
+    gap: 1rem;
+    min-height: 168px;
     -webkit-tap-highlight-color: transparent;
-    animation: categoryEnter 0.3s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-.category-card:hover {
-    background: var(--category-surface-soft);
-    transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(59, 130, 246, 0.2);
-    border-color: var(--category-accent);
+@media (hover: hover) {
+    .category-card:hover {
+        background: var(--category-surface-soft);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+        border-color: var(--category-accent);
+    }
+
+    .category-card:hover .category-arrow-icon {
+        transform: translateX(4px);
+        color: var(--category-accent);
+    }
 }
 
 .category-card:active {
-    transform: translateY(-2px);
+    transform: translateY(0);
 }
 
 .category-card:focus-visible {
     outline: 3px solid var(--category-focus);
     outline-offset: 2px;
     border-color: var(--category-accent-deep);
-    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.16);
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
-.category-card:nth-child(1) {
-    animation-delay: 0.03s;
-}
-
-.category-card:nth-child(2) {
-    animation-delay: 0.06s;
-}
-
-.category-card:nth-child(3) {
-    animation-delay: 0.09s;
-}
-
-.category-card:nth-child(4) {
-    animation-delay: 0.12s;
+.category-card-main {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
 }
 
 .category-icon {
-    font-size: 3rem;
-    margin-bottom: 1rem;
-    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+    font-size: 2rem;
+    width: 3rem;
+    height: 3rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.875rem;
+    background: rgba(59, 130, 246, 0.08);
+    flex-shrink: 0;
 }
 
-.category-card:hover .category-icon {
-    transform: translateY(-1px);
+.category-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.category-arrow {
+    flex-shrink: 0;
+    color: #94a3b8;
+}
+
+.category-arrow-icon {
+    width: 1.25rem;
+    height: 1.25rem;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .category-name-th {
     font-size: 1.25rem;
     font-weight: 600;
     color: var(--category-ink);
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.375rem;
     line-height: 1.4;
     overflow-wrap: anywhere;
 }
 
 .category-name-en {
     font-size: 0.875rem;
-    color: var(--category-muted);
-    margin-bottom: 1rem;
+    color: var(--category-body);
+    margin-bottom: 0;
     line-height: 1.5;
     overflow-wrap: anywhere;
+}
+
+.category-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.625rem;
+    margin-top: auto;
 }
 
 .category-count {
@@ -196,6 +312,7 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
     font-weight: 600;
     padding: 0.375rem 0.75rem;
     background-color: #eff6ff;
+    border: 1px solid rgba(59, 130, 246, 0.12);
     border-radius: 9999px;
 }
 
@@ -203,11 +320,10 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    margin-top: 0.75rem;
     padding: 0.375rem 0.75rem;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: rgba(254, 243, 199, 0.72);
     border-radius: 9999px;
-    border: 1px solid #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.24);
 }
 
 .high-score-icon {
@@ -220,27 +336,37 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
     color: #b45309;
 }
 
-@keyframes categoryEnter {
-    from {
-        opacity: 0;
-        transform: translateY(8px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.category-empty-state {
+    border-radius: 1rem;
+    border: 1px solid var(--category-border);
+    background: var(--category-surface);
+    padding: 2rem 1.25rem;
+    text-align: center;
+}
+
+.empty-title {
+    margin: 0 0 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--category-ink);
+}
+
+.empty-subtitle {
+    margin: 0;
+    font-size: 0.9375rem;
+    line-height: 1.55;
+    color: var(--category-body);
 }
 
 @media (prefers-reduced-motion: reduce) {
     .category-card,
-    .category-icon {
-        animation: none;
+    .category-arrow-icon {
         transition: none;
     }
 
     .category-card:hover,
     .category-card:active,
-    .category-card:hover .category-icon {
+    .category-card:hover .category-arrow-icon {
         transform: none;
     }
 }
@@ -248,6 +374,10 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
 @media (max-width: 640px) {
     .category-container {
         padding: 0.25rem 0;
+    }
+
+    .category-header {
+        padding: 1rem 0.875rem 1.25rem;
     }
 
     .category-title {
@@ -264,16 +394,22 @@ const getHighScore = (categoryId: string): HighScore | undefined => {
     }
 
     .category-card {
-        padding: 1.5rem 1rem;
-        min-height: 176px;
+        padding: 1.125rem 1rem;
+        min-height: 0;
     }
 
     .category-icon {
-        font-size: 2.5rem;
+        width: 2.75rem;
+        height: 2.75rem;
+        font-size: 1.75rem;
     }
 
     .category-name-th {
         font-size: 1.125rem;
+    }
+
+    .category-card-main {
+        gap: 0.875rem;
     }
 }
 </style>

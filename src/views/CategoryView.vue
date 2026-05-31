@@ -2,14 +2,18 @@
     <main class="main-content">
         <LoadingSpinner v-if="isLoading" message="กำลังโหลดหมวดหมู่..." />
         <template v-else>
-            <!-- Warning Banner for Fallback -->
-            <div v-if="error && isUsingFallback" class="warning-banner" role="status" aria-live="polite">
-                <span class="warning-icon">⚠️</span>
-                <span class="warning-text">{{ error }}</span>
+            <div v-if="isUsingFallback" class="warning-banner" role="status" aria-live="polite">
+                <div class="warning-copy">
+                    <p class="warning-title">กำลังใช้ข้อมูลออฟไลน์</p>
+                    <p class="warning-text">{{ error }}</p>
+                </div>
             </div>
 
             <CategorySelection
                 :categories="categoryList"
+                title="เลือกหมวดแฟลชการ์ด"
+                subtitle="Choose a flashcard category"
+                description="เลือกหมวดที่ต้องการทบทวนเพื่อเปิดชุดคำถามตามเนื้อหากฎหมายแต่ละกลุ่ม"
                 @select="selectCategory"
             />
         </template>
@@ -36,14 +40,13 @@ const filteredCounts = ref<Record<string, number>>({});
 const isLoading = ref(false);
 const error = ref<string | null>(null);
 const isUsingFallback = ref(false);
-let warningTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Use data manager composable
 const { loadCategories } = useDataManager();
 
 // Build category list from loaded categories
 const categoryList = computed(() =>
-    categories.value.map((store) => ({
+    categories.value.map((store: CategoryStore) => ({
         id: store.id,
         nameTh: store.nameTh,
         nameEn: store.nameEn,
@@ -58,11 +61,6 @@ const loadCategoriesData = async () => {
     error.value = null;
     isUsingFallback.value = false;
 
-    if (warningTimeout) {
-        clearTimeout(warningTimeout);
-        warningTimeout = null;
-    }
-
     try {
         // Use the composable to load categories
         const loadedCategories = await loadCategories();
@@ -74,23 +72,14 @@ const loadCategoriesData = async () => {
             console.warn("Using static data as fallback");
             categories.value = categoryStores;
             isUsingFallback.value = true;
-            error.value = "ไม่สามารถโหลดข้อมูลจาก API ได้ กำลังใช้ข้อมูลแบบออฟไลน์";
-            
-            // Clear fallback warning after a short delay to reduce visual noise.
-            warningTimeout = setTimeout(() => {
-                error.value = null;
-            }, 5000);
+            error.value = "ไม่สามารถโหลดข้อมูลจาก API ได้ในขณะนี้ ระบบจะแสดงหมวดหมู่จากข้อมูลที่บันทึกไว้ในเครื่อง";
         }
     } catch (err) {
         // Fall back to static data if API fails
         console.warn("Failed to load categories, using static data:", err);
         categories.value = categoryStores;
         isUsingFallback.value = true;
-        error.value = "ไม่สามารถโหลดข้อมูลจาก API ได้ กำลังใช้ข้อมูลแบบออฟไลน์";
-        
-        warningTimeout = setTimeout(() => {
-            error.value = null;
-        }, 5000);
+        error.value = "ไม่สามารถโหลดข้อมูลจาก API ได้ในขณะนี้ ระบบจะแสดงหมวดหมู่จากข้อมูลที่บันทึกไว้ในเครื่อง";
     } finally {
         isLoading.value = false;
     }
@@ -99,7 +88,7 @@ const loadCategoriesData = async () => {
 // Category Selection Method
 const selectCategory = (categoryId: string) => {
     // Check if category has multiple data sources
-    const category = categories.value.find(c => c.id === categoryId);
+    const category = categories.value.find((c: CategoryStore) => c.id === categoryId);
     
     if (category?.dataSources && category.dataSources.length > 1) {
         // Navigate to data source selection view
@@ -119,7 +108,7 @@ onMounted(async () => {
     await loadCategoriesData();
     
     // Calculate filtered counts for each category
-    await Promise.all(categories.value.map(async (store) => {
+    await Promise.all(categories.value.map(async (store: CategoryStore) => {
         const filtered = await filterQuestions(store.id, store.questions);
         filteredCounts.value[store.id] = filtered.length;
     }));
@@ -127,11 +116,6 @@ onMounted(async () => {
 
 // Reset header on unmount
 onUnmounted(() => {
-    if (warningTimeout) {
-        clearTimeout(warningTimeout);
-        warningTimeout = null;
-    }
-
     resetHeader();
 });
 </script>
@@ -153,12 +137,12 @@ onUnmounted(() => {
 
 .warning-banner {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 0.75rem;
-    padding: 0.875rem 1rem;
+    padding: 1rem 1rem 1.125rem;
     background-color: var(--category-warning-bg);
-    border: 1px solid var(--category-warning-border);
-    border-radius: 0.5rem;
+    border: 1px solid rgba(245, 158, 11, 0.26);
+    border-radius: 1rem;
     margin-bottom: 1.5rem;
     color: var(--category-warning-ink);
     animation: slideIn 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -175,16 +159,22 @@ onUnmounted(() => {
     }
 }
 
-.warning-icon {
-    font-size: 1.25rem;
-    flex-shrink: 0;
+.warning-copy {
+    flex: 1;
+}
+
+.warning-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    line-height: 1.4;
 }
 
 .warning-text {
     font-size: 0.875rem;
     font-weight: 600;
     line-height: 1.5;
-    flex: 1;
+    margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
