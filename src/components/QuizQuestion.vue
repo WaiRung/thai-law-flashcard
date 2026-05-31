@@ -1,49 +1,46 @@
 <template>
     <div class="quiz-question-container">
-        <!-- Question Card -->
         <div class="question-card">
             <div class="question-header">
-                <span class="question-number">ข้อ {{ questionNumber }} / {{ totalQuestions }}</span>
+                <div class="question-meta">
+                    <span class="question-number">ข้อ {{ props.questionNumber }} / {{ props.totalQuestions }}</span>
+                    <p class="question-guidance">อ่านโจทย์ให้ครบก่อนเลือกคำตอบที่ตรงที่สุด</p>
+                </div>
                 <span class="question-type">{{ typeLabel }}</span>
             </div>
-            <div class="question-content">{{ question.question }}</div>
+            <div class="question-content">{{ props.question.question }}</div>
         </div>
 
-        <!-- Answer Choices -->
         <div class="choices-container">
             <button
-                v-for="(choice, index) in question.choices"
+                v-for="(choice, index) in props.question.choices"
                 :key="index"
                 type="button"
                 class="choice-button"
                 :class="{
-                    'selected': selectedAnswer === choice,
-                    'correct': isAnswered && choice === question.correctAnswer,
-                    'incorrect': isAnswered && selectedAnswer === choice && choice !== question.correctAnswer,
-                    'disabled': isAnswered,
+                    selected: props.selectedAnswer === choice,
+                    correct: props.isAnswered && choice === props.question.correctAnswer,
+                    incorrect: props.isAnswered && props.selectedAnswer === choice && choice !== props.question.correctAnswer,
+                    disabled: props.isAnswered,
                 }"
+                :disabled="props.isAnswered"
+                :aria-pressed="props.selectedAnswer === choice"
                 @click="selectChoice(choice)"
-                :disabled="isAnswered"
-                :aria-pressed="selectedAnswer === choice"
             >
                 <span class="choice-letter">{{ choiceLetters[index] }}</span>
                 <span class="choice-text">{{ choice }}</span>
-                <span v-if="isAnswered && choice === question.correctAnswer" class="choice-icon correct-icon">✓</span>
-                <span v-if="isAnswered && selectedAnswer === choice && choice !== question.correctAnswer" class="choice-icon incorrect-icon">✗</span>
+                <span v-if="props.isAnswered && choice === props.question.correctAnswer" class="choice-icon correct-icon">✓</span>
+                <span v-if="props.isAnswered && props.selectedAnswer === choice && choice !== props.question.correctAnswer" class="choice-icon incorrect-icon">✗</span>
             </button>
         </div>
 
-        <!-- Result Feedback -->
-        <div v-if="isAnswered" class="result-feedback" :class="{ 'correct': isCorrect, 'incorrect': !isCorrect }">
-            <div class="result-icon">{{ isCorrect ? '🎉' : '😅' }}</div>
-            <div class="result-text">{{ isCorrect ? 'ถูกต้อง!' : 'ไม่ถูกต้อง' }}</div>
-            <div v-if="lastAnswerScore && isCorrect" class="score-breakdown">
-                <span class="score-item base-score">+{{ lastAnswerScore.baseScore }} คะแนน</span>
-                <span v-if="lastAnswerScore.timeBonus > 0" class="score-item bonus-score">+{{ lastAnswerScore.timeBonus.toFixed(2) }} โบนัส</span>
+        <div v-if="props.isAnswered" class="result-feedback" :class="{ correct: props.isCorrect, incorrect: !props.isCorrect }">
+            <div class="result-text">{{ props.isCorrect ? 'คำตอบถูกต้อง' : 'คำตอบยังไม่ถูกต้อง' }}</div>
+            <div v-if="props.lastAnswerScore && props.isCorrect" class="score-breakdown">
+                <span class="score-item base-score">+{{ props.lastAnswerScore.baseScore }} คะแนน</span>
+                <span v-if="props.lastAnswerScore.timeBonus > 0" class="score-item bonus-score">+{{ props.lastAnswerScore.timeBonus.toFixed(2) }} โบนัส</span>
             </div>
-            <div v-if="!isCorrect" class="correct-answer">
-                คำตอบที่ถูกต้อง: {{ question.correctAnswer }}
-            </div>
+            <div v-if="!props.isCorrect" class="correct-answer">คำตอบที่ถูกต้อง: {{ props.question.correctAnswer }}</div>
         </div>
     </div>
 </template>
@@ -75,7 +72,6 @@ const typeLabel = computed(() => {
         case "section":
         case "paragraph":
         case "subsection": {
-            // Derive the section prefix from the question ID (e.g., "ข้อ 5" -> "ข้อ", "มาตรา 1" -> "มาตรา")
             const prefixMatch = props.question.id.match(/^([^\s]+)\s+\d+/);
             const sectionPrefix = prefixMatch ? prefixMatch[1] : "มาตรา";
             if (props.question.type === "section") return sectionPrefix;
@@ -96,6 +92,15 @@ const selectChoice = (choice: string) => {
 
 <style scoped>
 .quiz-question-container {
+    --quiz-indigo: #6366f1;
+    --quiz-indigo-deep: #4f46e5;
+    --quiz-border: #dbe3ee;
+    --quiz-border-strong: #c7d2fe;
+    --quiz-surface: #ffffff;
+    --quiz-surface-soft: #f9fafb;
+    --quiz-text: #1f2937;
+    --quiz-body: #4b5563;
+    --quiz-muted: #6b7280;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
@@ -103,11 +108,12 @@ const selectChoice = (choice: string) => {
 }
 
 .question-card {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(249, 250, 251, 0.98) 100%);
+    border: 1px solid var(--quiz-border-strong);
     border-radius: 1rem;
     padding: 1.5rem;
-    color: white;
-    box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+    color: var(--quiz-text);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.08);
 }
 
 .question-header {
@@ -119,18 +125,33 @@ const selectChoice = (choice: string) => {
     flex-wrap: wrap;
 }
 
+.question-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
 .question-number {
     font-size: 0.875rem;
-    opacity: 0.9;
-    font-weight: 500;
+    font-weight: 700;
+    color: var(--quiz-indigo-deep);
+}
+
+.question-guidance {
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    color: var(--quiz-muted);
 }
 
 .question-type {
     font-size: 0.75rem;
-    padding: 0.25rem 0.75rem;
-    background: rgba(255, 255, 255, 0.2);
+    padding: 0.375rem 0.75rem;
+    background: #eef2ff;
+    border: 1px solid var(--quiz-border-strong);
     border-radius: 1rem;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--quiz-indigo-deep);
     white-space: nowrap;
 }
 
@@ -151,44 +172,45 @@ const selectChoice = (choice: string) => {
     display: flex;
     align-items: center;
     gap: 1rem;
+    width: 100%;
+    min-height: 56px;
     padding: 1rem 1.25rem;
-    background: white;
-    border: 1px solid #dbe3ee;
+    background: var(--quiz-surface);
+    border: 1px solid var(--quiz-border);
     border-radius: 0.75rem;
+    text-align: left;
     cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
     transition:
         border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
         background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
         box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
         transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
-    text-align: left;
-    width: 100%;
-    min-height: 56px;
-    -webkit-tap-highlight-color: transparent;
 }
 
 @media (hover: hover) {
     .choice-button:hover:not(.disabled) {
-        border-color: #6366f1;
-        background: #f5f3ff;
+        border-color: var(--quiz-border-strong);
+        background: #f8faff;
         transform: translateY(-1px);
-        box-shadow: 0 3px 9px rgba(99, 102, 241, 0.15);
+        box-shadow: 0 8px 18px rgba(99, 102, 241, 0.12);
     }
 }
 
 .choice-button.selected:not(.correct):not(.incorrect) {
-    border-color: #6366f1;
-    background: #ede9fe;
+    border-color: var(--quiz-indigo);
+    background: #eef2ff;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
 }
 
 .choice-button.correct {
-    border-color: #10b981;
-    background: #d1fae5;
+    border-color: #34d399;
+    background: #ecfdf5;
 }
 
 .choice-button.incorrect {
-    border-color: #ef4444;
-    background: #fee2e2;
+    border-color: #fca5a5;
+    background: #fef2f2;
 }
 
 .choice-button.disabled {
@@ -196,7 +218,7 @@ const selectChoice = (choice: string) => {
 }
 
 .choice-button:focus-visible {
-    outline: 3px solid rgba(99, 102, 241, 0.25);
+    outline: 3px solid rgba(99, 102, 241, 0.22);
     outline-offset: 2px;
 }
 
@@ -204,38 +226,38 @@ const selectChoice = (choice: string) => {
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
     width: 2rem;
     height: 2rem;
-    background: #f3f4f6;
+    background: var(--quiz-surface-soft);
     border-radius: 50%;
-    font-weight: 600;
     font-size: 0.875rem;
-    color: #4b5563;
-    flex-shrink: 0;
+    font-weight: 600;
+    color: var(--quiz-body);
 }
 
 .choice-button.correct .choice-letter {
     background: #10b981;
-    color: white;
+    color: #ffffff;
 }
 
 .choice-button.incorrect .choice-letter {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
 }
 
 .choice-text {
     flex: 1;
     font-size: 1rem;
-    color: #1f2937;
     font-weight: 500;
     line-height: 1.5;
+    color: var(--quiz-text);
     overflow-wrap: anywhere;
 }
 
 .choice-icon {
     font-size: 1.25rem;
-    font-weight: bold;
+    font-weight: 700;
 }
 
 .correct-icon {
@@ -249,29 +271,27 @@ const selectChoice = (choice: string) => {
 .result-feedback {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: flex-start;
     padding: 1.5rem;
+    border: 1px solid transparent;
     border-radius: 1rem;
-    text-align: center;
+    text-align: left;
 }
 
 .result-feedback.correct {
-    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+    border-color: #6ee7b7;
 }
 
 .result-feedback.incorrect {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-}
-
-.result-icon {
-    font-size: 2.5rem;
-    margin-bottom: 0.5rem;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-color: #fca5a5;
 }
 
 .result-text {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--quiz-text);
 }
 
 .result-feedback.correct .result-text {
@@ -283,22 +303,23 @@ const selectChoice = (choice: string) => {
 }
 
 .correct-answer {
-    margin-top: 0.5rem;
-    font-size: 0.875rem;
-    color: #6b7280;
+    margin-top: 0.875rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    color: var(--quiz-body);
 }
 
 .score-breakdown {
     display: flex;
     flex-wrap: wrap;
-    justify-content: center;
+    justify-content: flex-start;
     gap: 0.5rem;
-    margin-top: 0.5rem;
+    margin-top: 0.875rem;
 }
 
 .score-item {
     padding: 0.25rem 0.75rem;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.8);
     border-radius: 1rem;
     font-size: 0.875rem;
     font-weight: 600;
@@ -315,7 +336,7 @@ const selectChoice = (choice: string) => {
 .score-item.bonus-score {
     font-size: 0.75rem;
     font-weight: 500;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.55);
     color: #059669;
 }
 
@@ -324,38 +345,27 @@ const selectChoice = (choice: string) => {
         padding: 1.25rem;
     }
 
-    .question-header {
-        align-items: flex-start;
-    }
-
-    .question-number {
-        font-size: 0.8125rem;
-    }
-
     .question-content {
-        font-size: 1rem;
+        font-size: 1.0625rem;
     }
 
     .choice-button {
         padding: 0.875rem 1rem;
-        min-height: 52px;
+        gap: 0.75rem;
     }
 
     .choice-letter {
         width: 1.75rem;
         height: 1.75rem;
-        font-size: 0.75rem;
+        font-size: 0.8125rem;
     }
 
     .choice-text {
-        font-size: 0.875rem;
+        font-size: 0.9375rem;
     }
-}
 
-@media (prefers-reduced-motion: reduce) {
-    .choice-button,
-    .score-item {
-        transition: none;
+    .result-feedback {
+        padding: 1.25rem;
     }
 }
 </style>

@@ -1,57 +1,104 @@
 <template>
     <main class="main-content">
         <LoadingSpinner v-if="isLoading" message="กำลังเตรียมคำถาม..." />
-        
-        <!-- Quiz in Progress -->
+
+        <section v-else-if="!showResult && !currentQuestion" class="empty-state" aria-live="polite">
+            <div class="empty-state-panel">
+                <p class="empty-state-label">แบบทดสอบยังไม่พร้อมใช้งาน</p>
+                <h2 class="empty-state-title">ไม่พบข้อคำถามสำหรับชุดนี้</h2>
+                <p class="empty-state-body">
+                    ลองกลับไปเลือกหมวดหมู่หรือแหล่งข้อมูลอื่น เพื่อเริ่มทำแบบทดสอบจากเนื้อหาที่มีข้อคำถามครบถ้วน
+                </p>
+                <div class="empty-state-actions">
+                    <button type="button" class="secondary-button" @click="handleBack">
+                        กลับไปเลือกหมวดหมู่
+                    </button>
+                    <button type="button" class="primary-button" @click="initializeQuiz">
+                        โหลดแบบทดสอบอีกครั้ง
+                    </button>
+                </div>
+            </div>
+        </section>
+
         <template v-else-if="!showResult && currentQuestion">
-            <!-- Progress Bar with Timer -->
-            <div class="quiz-progress">
+            <section class="quiz-progress" aria-label="สถานะแบบทดสอบ">
                 <div class="progress-header">
-                    <div class="timer-display" :class="{ 'timer-warning': remainingTime <= 5, 'timer-danger': remainingTime <= 3, 'timer-paused': isPaused }">
-                        <span class="timer-icon">{{ isPaused ? '⏸️' : '⏱️' }}</span>
+                    <div class="progress-copy">
+                        <p class="progress-label">กำลังทำแบบทดสอบ</p>
+                        <p class="progress-title">ข้อ {{ currentQuestionIndex + 1 }} จาก {{ totalQuestions }}</p>
+                    </div>
+
+                    <div
+                        class="timer-display"
+                        :class="{
+                            'timer-warning': remainingTime <= 5,
+                            'timer-danger': remainingTime <= 3,
+                            'timer-paused': isPaused,
+                        }"
+                    >
+                        <span class="timer-label">{{ isPaused ? 'หยุดเวลาไว้' : 'เวลาที่เหลือ' }}</span>
                         <span class="timer-value">{{ formattedTime }}</span>
                     </div>
-                    <button 
-                        v-if="!isAnswered" 
-                        class="pause-button" 
-                        :class="{ 'paused': isPaused }"
-                        @click="togglePause"
+
+                    <button
+                        v-if="!isAnswered"
+                        type="button"
+                        class="pause-button"
+                        :class="{ paused: isPaused }"
                         :aria-label="isPaused ? 'ดำเนินการต่อ' : 'หยุดชั่วคราว'"
+                        @click="togglePause"
                     >
-                        <span class="pause-icon">{{ isPaused ? '▶️' : '⏸️' }}</span>
-                        <span class="pause-text">{{ isPaused ? 'ต่อ' : 'พัก' }}</span>
+                        <span class="pause-text">{{ isPaused ? 'เล่นต่อ' : 'พักเวลา' }}</span>
                     </button>
+
                     <div class="score-display">
-                        <span class="score-label">คะแนน:</span>
+                        <span class="score-label">คะแนนสะสม</span>
                         <span class="score-value">{{ score }}/{{ totalQuestions }}</span>
                     </div>
                 </div>
-                <div class="progress-bar">
+
+                <div class="bar-meta">
+                    <span>ความคืบหน้า</span>
+                    <span>{{ Math.round(progressPercentage) }}%</span>
+                </div>
+                <div class="progress-bar" aria-hidden="true">
                     <div class="progress-fill" :style="{ width: progressPercentage + '%' }"></div>
                 </div>
-                <div class="timer-bar">
-                    <div 
-                        class="timer-fill" 
-                        :class="{ 'timer-warning': remainingTime <= 5, 'timer-danger': remainingTime <= 3, 'timer-paused': isPaused }"
+
+                <div class="bar-meta">
+                    <span>{{ isPaused ? 'ตัวจับเวลาถูกหยุดไว้' : 'ตัวจับเวลารายข้อ' }}</span>
+                    <span>{{ formattedTime }}</span>
+                </div>
+                <div class="timer-bar" aria-hidden="true">
+                    <div
+                        class="timer-fill"
+                        :class="{
+                            'timer-warning': remainingTime <= 5,
+                            'timer-danger': remainingTime <= 3,
+                            'timer-paused': isPaused,
+                        }"
                         :style="{ width: timerPercentage + '%' }"
                     ></div>
                 </div>
-            </div>
+            </section>
 
-            <!-- Pause Overlay -->
-            <div v-if="isPaused" class="pause-overlay">
+            <div
+                v-if="isPaused"
+                class="pause-overlay"
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="pause-title"
+            >
                 <div class="pause-modal">
-                    <div class="pause-icon-large">⏸️</div>
-                    <h2 class="pause-title">หยุดพักชั่วคราว</h2>
-                    <p class="pause-subtitle">คลิกปุ่มด้านล่างเพื่อเล่นต่อ</p>
-                    <button class="resume-button" @click="togglePause">
-                        <span class="resume-icon">▶️</span>
+                    <p class="pause-label">หยุดชั่วคราว</p>
+                    <h2 id="pause-title" class="pause-title">เวลาจะไม่เดินจนกว่าคุณจะพร้อม</h2>
+                    <p class="pause-subtitle">กดปุ่มด้านล่างเพื่อกลับไปตอบคำถามข้อนี้ต่อทันที</p>
+                    <button type="button" class="resume-button" @click="togglePause">
                         เล่นต่อ
                     </button>
                 </div>
             </div>
 
-            <!-- Quiz Question (hidden when paused) -->
             <template v-if="!isPaused">
                 <QuizQuestion
                     :question="currentQuestion"
@@ -64,17 +111,15 @@
                     @select="handleSelectAnswer"
                 />
 
-                <!-- Next Button -->
                 <div v-if="isAnswered" class="next-button-container">
-                    <button class="next-button" @click="handleNext">
-                        {{ isLastQuestion ? 'ดูผลลัพธ์' : 'ข้อถัดไป' }}
+                    <button type="button" class="next-button" @click="handleNext">
+                        {{ isLastQuestion ? 'ดูสรุปผล' : 'ไปข้อถัดไป' }}
                         <span class="next-arrow">→</span>
                     </button>
                 </div>
             </template>
         </template>
 
-        <!-- Quiz Result -->
         <QuizResult
             v-else-if="showResult"
             :result="quizResult"
@@ -105,17 +150,14 @@ const router = useRouter();
 const route = useRoute();
 const { setHeader, resetHeader } = useHeader();
 
-// Constants
 const QUIZ_QUESTION_COUNT = 20;
 
-// Get categoryId and dataSourceIndex from route params
 const categoryId = computed(() => route.params.categoryId as string);
 const dataSourceIndex = computed(() => {
     const index = route.params.dataSourceIndex;
     return index !== undefined ? parseInt(index as string, 10) : undefined;
 });
 
-// State
 const isLoading = ref(true);
 const questions = ref<QuizQuestionType[]>([]);
 const currentQuestionIndex = ref(0);
@@ -126,7 +168,6 @@ const isCorrect = ref<boolean | null>(null);
 const showResult = ref(false);
 const categories = ref<CategoryStore[]>([]);
 
-// Timer state
 const remainingTime = ref(0);
 const totalTimeForQuestion = ref(0);
 const timerInterval = ref<ReturnType<typeof setInterval> | null>(null);
@@ -135,19 +176,19 @@ const totalScore = ref(0);
 const totalTimeBonus = ref(0);
 const lastAnswerScore = ref<QuizAnswerScore | null>(null);
 
-// Pause state
 const isPaused = ref(false);
 const pauseStartTimestamp = ref(0);
 
-// Helper function for rounding to two decimal places
 const roundToTwo = (value: number): number => Math.round(value * 100) / 100;
 
-// Computed
 const currentQuestion = computed(() => questions.value[currentQuestionIndex.value]);
 const totalQuestions = computed(() => questions.value.length);
 const isLastQuestion = computed(() => currentQuestionIndex.value >= totalQuestions.value - 1);
 const answeredCount = computed(() => currentQuestionIndex.value + (isAnswered.value ? 1 : 0));
-const progressPercentage = computed(() => (answeredCount.value / totalQuestions.value) * 100);
+const progressPercentage = computed(() => {
+    if (totalQuestions.value === 0) return 0;
+    return (answeredCount.value / totalQuestions.value) * 100;
+});
 const timerPercentage = computed(() => {
     if (totalTimeForQuestion.value === 0) return 0;
     return (remainingTime.value / totalTimeForQuestion.value) * 100;
@@ -158,32 +199,28 @@ const quizResult = computed<QuizResultType>(() => ({
     totalQuestions: totalQuestions.value,
     correctAnswers: score.value,
     score: score.value,
-    percentage: Math.round((score.value / totalQuestions.value) * 100),
+    percentage: totalQuestions.value > 0 ? Math.round((score.value / totalQuestions.value) * 100) : 0,
     timeBonus: roundToTwo(totalTimeBonus.value),
     totalScore: roundToTwo(totalScore.value),
-    maxScore: totalQuestions.value * 2, // 1 base point + 1 time bonus point per question
+    maxScore: totalQuestions.value * 2,
 }));
 
-// Timer functions
 const startTimer = () => {
     stopTimer();
     if (!currentQuestion.value) return;
-    
-    // Calculate countdown time based on question length
+
     const questionTime = calculateCountdownTime(currentQuestion.value.question);
     totalTimeForQuestion.value = questionTime;
     remainingTime.value = questionTime;
     timerStartTime.value = Date.now();
-    
+
     timerInterval.value = setInterval(() => {
         if (!isAnswered.value && !isPaused.value) {
-            // Use actual elapsed time for accuracy
             const elapsed = (Date.now() - timerStartTime.value) / 1000;
             const remaining = totalTimeForQuestion.value - elapsed;
             remainingTime.value = Math.max(0, remaining);
-            
+
             if (remainingTime.value <= 0) {
-                // Time's up - auto-fail the question
                 handleTimeUp();
             }
         }
@@ -197,17 +234,14 @@ const stopTimer = () => {
     }
 };
 
-// Pause/Resume functions
 const togglePause = () => {
     if (isAnswered.value) return;
-    
+
     if (isPaused.value) {
-        // Resume: adjust timerStartTime to account for pause duration
         const pauseDuration = (Date.now() - pauseStartTimestamp.value) / 1000;
-        timerStartTime.value = timerStartTime.value + (pauseDuration * 1000);
+        timerStartTime.value = timerStartTime.value + pauseDuration * 1000;
         isPaused.value = false;
     } else {
-        // Pause: save timestamp when pause started
         pauseStartTimestamp.value = Date.now();
         isPaused.value = true;
     }
@@ -215,7 +249,7 @@ const togglePause = () => {
 
 const handleTimeUp = () => {
     if (isAnswered.value) return;
-    
+
     selectedAnswer.value = null;
     isAnswered.value = true;
     isCorrect.value = false;
@@ -227,10 +261,8 @@ const handleTimeUp = () => {
     stopTimer();
 };
 
-// Load categories from cache or fallback to static data
 const loadCategories = async () => {
     try {
-        // First, try to load from cache
         const cachedCategories = await getCategoriesCache();
         const cacheIsValid = await isCacheValid();
 
@@ -239,35 +271,25 @@ const loadCategories = async () => {
             return;
         }
 
-        // Try to fetch from API
-        const apiCategories = await fetchCategories();
-        categories.value = apiCategories;
+        categories.value = await fetchCategories();
     } catch (err) {
-        // Fall back to static data
-        console.warn("Failed to load categories, using static data:", err);
+        void err;
         categories.value = categoryStores;
     }
 };
 
-// Initialize quiz
 const initializeQuiz = async () => {
     isLoading.value = true;
     stopTimer();
-    
+
     await loadCategories();
-    
-    const selectedStore = categories.value.find(
-        (store) => store.id === categoryId.value,
-    );
-    
+
+    const selectedStore = categories.value.find((store) => store.id === categoryId.value);
     if (!selectedStore) {
-        // Invalid category ID, redirect to home
-        console.warn(`Category not found: ${categoryId.value}`);
-        router.replace('/');
+        router.replace("/");
         return;
     }
 
-    // Set header title and subtitle based on the selected category or data source
     if (dataSourceIndex.value !== undefined && selectedStore.dataSources) {
         const dataSource = selectedStore.dataSources[dataSourceIndex.value];
         if (dataSource) {
@@ -281,17 +303,13 @@ const initializeQuiz = async () => {
         setHeader(selectedStore.nameTh, selectedStore.nameEn);
     }
 
-    // Apply question filtering based on data source
     const filteredQuestions = await filterQuestionsByDataSource(
         categoryId.value,
         selectedStore.questions,
-        dataSourceIndex.value
+        dataSourceIndex.value,
     );
 
-    // Generate quiz questions
     questions.value = generateQuizQuestions(filteredQuestions, QUIZ_QUESTION_COUNT);
-    
-    // Reset state
     currentQuestionIndex.value = 0;
     score.value = 0;
     totalScore.value = 0;
@@ -302,41 +320,35 @@ const initializeQuiz = async () => {
     showResult.value = false;
     lastAnswerScore.value = null;
     isPaused.value = false;
-    
     isLoading.value = false;
-    
-    // Start timer for first question
+
     startTimer();
 };
 
-// Handle answer selection
 const handleSelectAnswer = (answer: string) => {
-    if (isAnswered.value) return;
-    
+    if (isAnswered.value || !currentQuestion.value) return;
+
     stopTimer();
-    
     selectedAnswer.value = answer;
     isAnswered.value = true;
     isCorrect.value = answer === currentQuestion.value.correctAnswer;
-    
-    // Calculate score with time bonus
+
     const answerScore = calculateAnswerScore(
         isCorrect.value,
         remainingTime.value,
-        totalTimeForQuestion.value
+        totalTimeForQuestion.value,
     );
-    
+
     lastAnswerScore.value = answerScore;
-    
+
     if (isCorrect.value) {
         score.value++;
     }
-    
+
     totalScore.value += answerScore.totalPoints;
     totalTimeBonus.value += answerScore.timeBonus;
 };
 
-// Handle next question
 const handleNext = () => {
     if (isLastQuestion.value) {
         stopTimer();
@@ -351,23 +363,19 @@ const handleNext = () => {
     }
 };
 
-// Handle play again
 const handlePlayAgain = () => {
-    initializeQuiz();
+    void initializeQuiz();
 };
 
-// Handle back to categories
 const handleBack = () => {
     stopTimer();
-    router.push({ name: "quizlaw-categories" });
+    void router.push({ name: "quizlaw-categories" });
 };
 
-// Initialize on mount
 onMounted(() => {
-    initializeQuiz();
+    void initializeQuiz();
 });
 
-// Cleanup on unmount
 onUnmounted(() => {
     stopTimer();
     resetHeader();
@@ -376,6 +384,20 @@ onUnmounted(() => {
 
 <style scoped>
 .main-content {
+    --quiz-indigo: #6366f1;
+    --quiz-indigo-deep: #4f46e5;
+    --quiz-surface: #ffffff;
+    --quiz-surface-soft: #f9fafb;
+    --quiz-canvas: #f3f4f6;
+    --quiz-border: #dbe3ee;
+    --quiz-border-strong: #c7d2fe;
+    --quiz-text: #1f2937;
+    --quiz-body: #4b5563;
+    --quiz-muted: #6b7280;
+    --quiz-warning: #b45309;
+    --quiz-warning-soft: #fef3c7;
+    --quiz-danger: #dc2626;
+    --quiz-danger-soft: #fee2e2;
     flex: 1;
     padding: 1.25rem max(0.75rem, env(safe-area-inset-right, 0px)) 1.5rem max(0.75rem, env(safe-area-inset-left, 0px));
     max-width: 600px;
@@ -386,100 +408,194 @@ onUnmounted(() => {
     gap: 1.5rem;
 }
 
+.empty-state {
+    display: flex;
+    flex: 1;
+    align-items: center;
+}
+
+.empty-state-panel,
+.quiz-progress,
+.pause-modal {
+    background: var(--quiz-surface);
+    border: 1px solid var(--quiz-border);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.empty-state-panel {
+    width: 100%;
+    padding: 1.5rem;
+    text-align: left;
+}
+
+.empty-state-label,
+.progress-label,
+.pause-label {
+    margin: 0 0 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--quiz-indigo-deep);
+}
+
+.empty-state-title,
+.progress-title,
+.pause-title {
+    margin: 0;
+    color: var(--quiz-text);
+}
+
+.empty-state-title {
+    font-size: 1.375rem;
+    line-height: 1.35;
+}
+
+.empty-state-body,
+.pause-subtitle {
+    margin: 0.75rem 0 0;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--quiz-body);
+}
+
+.empty-state-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+}
+
 .quiz-progress {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    padding: 1rem;
 }
 
 .progress-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.75rem;
     flex-wrap: wrap;
+}
+
+.progress-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.progress-title {
+    font-size: 1.125rem;
+    font-weight: 700;
+    line-height: 1.35;
 }
 
 .timer-display {
     display: flex;
-    align-items: center;
-    gap: 0.375rem;
-    padding: 0.375rem 0.75rem;
-    background: #f3f4f6;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 0.125rem;
+    padding: 0.625rem 0.875rem;
+    background: var(--quiz-surface-soft);
+    border: 1px solid var(--quiz-border);
     border-radius: 1rem;
-    font-weight: 600;
-    font-size: 1rem;
-    color: #374151;
-    transition: all 0.3s ease;
+    color: var(--quiz-text);
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     min-height: 44px;
 }
 
+.timer-label {
+    font-size: 0.75rem;
+    color: var(--quiz-muted);
+}
+
 .timer-display.timer-warning {
-    background: #fef3c7;
-    color: #b45309;
+    background: var(--quiz-warning-soft);
+    border-color: #fcd34d;
+    color: var(--quiz-warning);
 }
 
 .timer-display.timer-danger {
-    background: #fee2e2;
-    color: #dc2626;
+    background: var(--quiz-danger-soft);
+    border-color: #fca5a5;
+    color: var(--quiz-danger);
     animation: pulse 0.5s ease-in-out infinite;
 }
 
 @keyframes pulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-}
+    0%,
+    100% {
+        transform: scale(1);
+    }
 
-.timer-icon {
-    font-size: 1rem;
+    50% {
+        transform: scale(1.03);
+    }
 }
 
 .timer-value {
     min-width: 2rem;
     text-align: center;
+    font-size: 1.125rem;
+    font-weight: 700;
 }
 
 .score-display {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    align-items: flex-end;
+    justify-content: center;
     gap: 0.25rem;
-    font-size: 0.875rem;
-    color: #6b7280;
-    font-weight: 500;
     margin-left: auto;
     min-height: 44px;
+    color: var(--quiz-muted);
+    font-size: 0.875rem;
+    font-weight: 500;
 }
 
 .score-value {
-    color: #6366f1;
+    color: var(--quiz-indigo-deep);
+    font-size: 1rem;
     font-weight: 700;
+}
+
+.bar-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.8125rem;
+    color: var(--quiz-muted);
 }
 
 .progress-bar {
     height: 8px;
-    background: #e5e7eb;
-    border-radius: 4px;
+    background: var(--quiz-canvas);
+    border-radius: 9999px;
     overflow: hidden;
 }
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
-    border-radius: 4px;
-    transition: width 0.3s ease;
+    background: linear-gradient(90deg, var(--quiz-indigo) 0%, var(--quiz-indigo-deep) 100%);
+    border-radius: 9999px;
+    transition: width 0.25s ease;
 }
 
 .timer-bar {
     height: 4px;
-    background: #e5e7eb;
-    border-radius: 2px;
+    background: var(--quiz-canvas);
+    border-radius: 9999px;
     overflow: hidden;
 }
 
 .timer-fill {
     height: 100%;
     background: linear-gradient(90deg, #10b981 0%, #059669 100%);
-    border-radius: 2px;
+    border-radius: 9999px;
     transition: width 0.1s linear;
 }
 
@@ -492,7 +608,8 @@ onUnmounted(() => {
 }
 
 .timer-display.timer-paused {
-    background: #e0e7ff;
+    background: #eef2ff;
+    border-color: var(--quiz-border-strong);
     color: #4338ca;
 }
 
@@ -500,26 +617,58 @@ onUnmounted(() => {
     background: linear-gradient(90deg, #818cf8 0%, #6366f1 100%);
 }
 
-.pause-button {
+.pause-button,
+.secondary-button,
+.primary-button,
+.resume-button,
+.next-button {
     display: flex;
     align-items: center;
-    gap: 0.25rem;
-    padding: 0.375rem 0.875rem;
-    background: #f3f4f6;
-    border: 1px solid #e5e7eb;
-    border-radius: 1rem;
-    font-weight: 600;
-    font-size: 0.875rem;
-    color: #4b5563;
-    cursor: pointer;
-    transition: all 0.2s ease;
+    justify-content: center;
+    gap: 0.5rem;
     min-height: 44px;
+    padding: 0.875rem 1.25rem;
+    border-radius: 0.875rem;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    transition:
+        transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        box-shadow 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        background-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1),
+        border-color 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.pause-button:hover {
-    background: #e5e7eb;
-    border-color: #d1d5db;
+.pause-button,
+.secondary-button {
+    background: var(--quiz-surface-soft);
+    border: 1px solid var(--quiz-border);
+    color: var(--quiz-body);
+}
+
+.primary-button,
+.resume-button,
+.next-button {
+    background: linear-gradient(135deg, var(--quiz-indigo) 0%, var(--quiz-indigo-deep) 100%);
+    border: 1px solid transparent;
+    color: #ffffff;
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.18);
+}
+
+@media (hover: hover) {
+    .pause-button:hover,
+    .secondary-button:hover {
+        background: #e5e7eb;
+        border-color: #d1d5db;
+    }
+
+    .primary-button:hover,
+    .resume-button:hover,
+    .next-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 12px 24px rgba(79, 70, 229, 0.24);
+    }
 }
 
 .pause-button.paused {
@@ -532,97 +681,57 @@ onUnmounted(() => {
     background: #bbf7d0;
 }
 
-.pause-button:focus-visible {
+.pause-button:focus-visible,
+.secondary-button:focus-visible,
+.primary-button:focus-visible,
+.resume-button:focus-visible,
+.next-button:focus-visible {
     outline: 3px solid rgba(99, 102, 241, 0.28);
     outline-offset: 2px;
 }
 
-.pause-icon {
-    font-size: 0.875rem;
-}
-
 .pause-text {
-    font-size: 0.75rem;
+    white-space: nowrap;
 }
 
 .pause-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.7);
+    inset: 0;
+    z-index: 100;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 100;
+    background: rgba(15, 23, 42, 0.55);
     backdrop-filter: blur(4px);
 }
 
 .pause-modal {
-    background: white;
-    border-radius: 1.5rem;
+    width: min(90%, 320px);
     padding: 2rem;
     text-align: center;
-    max-width: 320px;
-    width: 90%;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     animation: scaleIn 0.2s ease-out;
 }
 
 @keyframes scaleIn {
     0% {
-        transform: scale(0.9);
+        transform: scale(0.96);
         opacity: 0;
     }
+
     100% {
         transform: scale(1);
         opacity: 1;
     }
 }
 
-.pause-icon-large {
-    font-size: 4rem;
-    margin-bottom: 1rem;
-}
-
 .pause-title {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #1f2937;
-    margin: 0 0 0.5rem 0;
-}
-
-.pause-subtitle {
-    font-size: 0.875rem;
-    color: #6b7280;
-    margin: 0 0 1.5rem 0;
 }
 
 .resume-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
     width: 100%;
-    padding: 1rem 1.5rem;
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.resume-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
-}
-
-.resume-icon {
-    font-size: 1.25rem;
+    margin-top: 1.5rem;
 }
 
 .next-button-container {
@@ -631,31 +740,9 @@ onUnmounted(() => {
     margin-top: 1rem;
 }
 
-.next-button {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 1rem 2rem;
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: white;
-    border: none;
-    border-radius: 0.75rem;
-    font-size: 1rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    min-height: 48px;
-    -webkit-tap-highlight-color: transparent;
-}
-
-.next-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
-}
-
 .next-arrow {
     font-size: 1.25rem;
-    transition: transform 0.2s;
+    transition: transform 0.2s ease;
 }
 
 .next-button:hover .next-arrow {
@@ -676,51 +763,55 @@ onUnmounted(() => {
     .pause-button,
     .score-display {
         flex: 1 1 calc(50% - 0.5rem);
-        justify-content: center;
     }
 
     .score-display {
         order: 3;
-        flex: 1 1 100%;
+        flex-basis: 100%;
         margin-left: 0;
-        justify-content: flex-end;
-        padding-right: 0.125rem;
+        align-items: flex-start;
     }
 
     .next-button {
-        padding: 0.875rem 1.5rem;
         width: 100%;
-        justify-content: center;
     }
 
     .pause-button {
-        padding: 0.25rem 0.625rem;
-    }
-
-    .pause-text {
-        display: none;
+        flex: 1 1 auto;
     }
 
     .pause-modal {
         padding: 1.5rem;
     }
 
-    .pause-icon-large {
-        font-size: 3rem;
-    }
-
     .pause-title {
         font-size: 1.25rem;
+    }
+
+    .empty-state-actions {
+        flex-direction: column-reverse;
+    }
+
+    .empty-state-actions > * {
+        width: 100%;
     }
 }
 
 @media (prefers-reduced-motion: reduce) {
     .timer-display,
     .pause-button,
+    .secondary-button,
+    .primary-button,
+    .resume-button,
     .next-button,
     .progress-fill,
     .timer-fill {
         transition: none;
+    }
+
+    .timer-display.timer-danger,
+    .pause-modal {
+        animation: none;
     }
 }
 </style>

@@ -1,49 +1,42 @@
 <template>
     <div class="quiz-result-container">
         <div class="result-card">
-            <div class="result-icon">{{ resultEmoji }}</div>
+            <p class="result-kicker">สรุปผลแบบทดสอบ</p>
             <h2 class="result-title">{{ resultTitle }}</h2>
-            <p class="result-subtitle">Quiz Completed!</p>
-            
-            <!-- New High Score Badge -->
+            <p class="result-subtitle">ตรวจทานผลลัพธ์แล้วเลือกทำต่อหรือกลับไปเลือกหมวดใหม่</p>
+
             <div v-if="isNewHighScore" class="new-high-score-badge">
-                <span class="badge-icon">🏅</span>
                 <span class="badge-text">สถิติใหม่!</span>
             </div>
-            
+
             <div class="score-display">
                 <div class="score-circle" :class="scoreClass">
                     <span class="score-percentage">{{ result.percentage }}%</span>
                 </div>
             </div>
 
-            <!-- Total Score -->
             <div class="total-score-container">
                 <div class="total-score-value">{{ result.correctAnswers }} / {{ result.totalQuestions }}</div>
-                <div class="total-score-label">คะแนนพื้นฐาน</div>
+                <div class="total-score-label">ตอบถูกจากทั้งหมด</div>
                 <div v-if="result.timeBonus > 0" class="bonus-score-display">
-                    <span class="bonus-score-icon">⚡</span>
                     <span class="bonus-score-value">+{{ result.timeBonus.toFixed(2) }}</span>
                     <span class="bonus-score-label">โบนัสความเร็ว</span>
                 </div>
             </div>
-            
-            <!-- High Score Display -->
+
             <div v-if="highScore" class="high-score-container">
                 <div class="high-score-header">
-                    <span class="high-score-icon">🏆</span>
                     <span class="high-score-title">สถิติสูงสุด</span>
                 </div>
                 <div class="high-score-details">
                     <div class="high-score-value">{{ highScore.score }} / {{ highScore.totalQuestions }} ({{ highScore.percentage }}%)</div>
                     <div v-if="highScoreBonus > 0" class="high-score-bonus">
-                        <span class="bonus-score-icon">⚡</span>
                         <span>+{{ highScoreBonus.toFixed(2) }} โบนัส</span>
                     </div>
                     <div class="high-score-date">{{ formattedHighScoreDate }}</div>
                 </div>
             </div>
-            
+
             <div class="stats-container">
                 <div class="stat-item">
                     <span class="stat-value correct">{{ result.correctAnswers }}</span>
@@ -60,14 +53,12 @@
                     <span class="stat-label">ทั้งหมด</span>
                 </div>
             </div>
-            
+
             <div class="action-buttons">
-                <button class="action-button primary" @click="handlePlayAgain">
-                    <span class="button-icon">🔄</span>
+                <button type="button" class="action-button primary" @click="handlePlayAgain">
                     เล่นอีกครั้ง
                 </button>
-                <button class="action-button secondary" @click="handleBack">
-                    <span class="button-icon">←</span>
+                <button type="button" class="action-button secondary" @click="handleBack">
                     เลือกหมวดหมู่
                 </button>
             </div>
@@ -92,16 +83,8 @@ const emit = defineEmits<{
     back: [];
 }>();
 
-// High score state
 const highScore = ref<HighScore | null>(null);
 const isNewHighScore = ref(false);
-
-const resultEmoji = computed(() => {
-    if (props.result.percentage >= 80) return "🏆";
-    if (props.result.percentage >= 60) return "🎉";
-    if (props.result.percentage >= 40) return "👍";
-    return "💪";
-});
 
 const resultTitle = computed(() => {
     if (props.result.percentage >= 80) return "ยอดเยี่ยม!";
@@ -124,11 +107,6 @@ const formattedHighScoreDate = computed(() => {
 
 const highScoreBonus = computed(() => {
     if (!highScore.value) return 0;
-    // Time bonus = totalScore - base score (number of correct answers)
-    // In the scoring system: baseScore = 1 per correct answer, timeBonus = 0-1 per answer
-    // totalScore = sum of (baseScore + timeBonus) for all answers
-    // Since score = number of correct answers = sum of baseScores
-    // timeBonus = totalScore - score
     return Math.max(0, highScore.value.totalScore - highScore.value.score);
 });
 
@@ -140,24 +118,29 @@ const handleBack = () => {
     emit("back");
 };
 
-// Check and save high score on mount
 onMounted(async () => {
-    // Check and save if this is a new high score
     isNewHighScore.value = await checkAndSaveHighScore(
         props.categoryId,
         props.result.correctAnswers,
         props.result.percentage,
         props.result.totalQuestions,
-        props.result.totalScore
+        props.result.totalScore,
     );
-    
-    // Load the current high score (which may be the one we just saved)
+
     highScore.value = await getHighScore(props.categoryId);
 });
 </script>
 
 <style scoped>
 .quiz-result-container {
+    --quiz-indigo: #6366f1;
+    --quiz-indigo-deep: #4f46e5;
+    --quiz-surface: #ffffff;
+    --quiz-surface-soft: #f9fafb;
+    --quiz-border: #e5e7eb;
+    --quiz-text: #1f2937;
+    --quiz-body: #4b5563;
+    --quiz-muted: #6b7280;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -166,51 +149,44 @@ onMounted(async () => {
 }
 
 .result-card {
-    background: white;
-    border-radius: 1.5rem;
-    padding: 2rem;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    max-width: 400px;
     width: 100%;
+    max-width: 400px;
+    padding: 2rem;
+    background: var(--quiz-surface);
+    border: 1px solid var(--quiz-border);
+    border-radius: 1.5rem;
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.1);
+    text-align: center;
 }
 
-.result-icon {
-    font-size: 4rem;
-    margin-bottom: 1rem;
+.result-kicker {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--quiz-indigo-deep);
 }
 
 .result-title {
+    margin: 0 0 0.25rem;
     font-size: 1.75rem;
     font-weight: 700;
-    color: #1f2937;
-    margin: 0 0 0.25rem 0;
+    color: var(--quiz-text);
 }
 
 .result-subtitle {
+    margin: 0 0 1rem;
     font-size: 1rem;
-    color: #6b7280;
-    margin: 0 0 1rem 0;
+    line-height: 1.55;
+    color: var(--quiz-body);
 }
 
 .new-high-score-badge {
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
     padding: 0.5rem 1rem;
+    margin-bottom: 1rem;
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     border-radius: 9999px;
-    margin-bottom: 1rem;
-    animation: bounce 0.5s ease-in-out;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
-}
-
-.badge-icon {
-    font-size: 1.25rem;
 }
 
 .badge-text {
@@ -229,8 +205,8 @@ onMounted(async () => {
     justify-content: center;
     width: 120px;
     height: 120px;
-    border-radius: 50%;
     border: 6px solid;
+    border-radius: 50%;
 }
 
 .score-circle.excellent {
@@ -256,7 +232,7 @@ onMounted(async () => {
 .score-percentage {
     font-size: 2rem;
     font-weight: 700;
-    color: #1f2937;
+    color: var(--quiz-text);
 }
 
 .total-score-container {
@@ -265,9 +241,9 @@ onMounted(async () => {
     align-items: center;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border: 1px solid #fbbf24;
     border-radius: 1rem;
-    border: 2px solid #f59e0b;
 }
 
 .total-score-value {
@@ -278,8 +254,8 @@ onMounted(async () => {
 
 .total-score-label {
     font-size: 0.875rem;
-    color: #92400e;
     font-weight: 600;
+    color: #92400e;
 }
 
 .bonus-score-display {
@@ -292,10 +268,6 @@ onMounted(async () => {
     border-radius: 1rem;
 }
 
-.bonus-score-icon {
-    font-size: 0.875rem;
-}
-
 .bonus-score-value {
     font-size: 0.875rem;
     font-weight: 700;
@@ -304,7 +276,7 @@ onMounted(async () => {
 
 .bonus-score-label {
     font-size: 0.75rem;
-    color: #6b7280;
+    color: var(--quiz-muted);
 }
 
 .high-score-container {
@@ -313,20 +285,15 @@ onMounted(async () => {
     align-items: center;
     margin-bottom: 1.5rem;
     padding: 1rem;
-    background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    border: 1px solid #c4b5fd;
     border-radius: 1rem;
-    border: 2px solid #8b5cf6;
 }
 
 .high-score-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
     margin-bottom: 0.5rem;
-}
-
-.high-score-icon {
-    font-size: 1.25rem;
 }
 
 .high-score-title {
@@ -348,28 +315,24 @@ onMounted(async () => {
 }
 
 .high-score-bonus {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
+    margin-top: 0.25rem;
     font-size: 0.75rem;
     color: #059669;
-    margin-top: 0.25rem;
 }
 
 .high-score-date {
+    margin-top: 0.25rem;
     font-size: 0.75rem;
     color: #7c3aed;
-    margin-top: 0.25rem;
 }
 
 .stats-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     margin-bottom: 2rem;
     padding: 1rem;
-    background: #f9fafb;
+    background: var(--quiz-surface-soft);
+    border: 1px solid var(--quiz-border);
     border-radius: 1rem;
 }
 
@@ -377,6 +340,7 @@ onMounted(async () => {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.125rem;
 }
 
 .stat-value {
@@ -398,13 +362,13 @@ onMounted(async () => {
 
 .stat-label {
     font-size: 0.75rem;
-    color: #9ca3af;
-    margin-top: 0.25rem;
+    color: #6b7280;
 }
 
 .stat-divider {
     width: 1px;
     height: 40px;
+    align-self: center;
     background: #e5e7eb;
 }
 
@@ -418,47 +382,43 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 0.5rem;
     padding: 1rem 1.5rem;
+    border: none;
     border-radius: 0.75rem;
     font-size: 1rem;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
-    border: none;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .action-button.primary {
-    background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--quiz-indigo) 0%, var(--quiz-indigo-deep) 100%);
+    color: #ffffff;
 }
 
 .action-button.primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(79, 70, 229, 0.25);
 }
 
 .action-button.secondary {
-    background: #f3f4f6;
-    color: #4b5563;
-    border: 2px solid #e5e7eb;
+    background: var(--quiz-surface-soft);
+    border: 1px solid var(--quiz-border);
+    color: var(--quiz-body);
 }
 
 .action-button.secondary:hover {
     background: #e5e7eb;
 }
 
-.button-icon {
-    font-size: 1.25rem;
+.action-button:focus-visible {
+    outline: 3px solid rgba(99, 102, 241, 0.25);
+    outline-offset: 2px;
 }
 
 @media (max-width: 640px) {
     .result-card {
         padding: 1.5rem;
-    }
-
-    .result-icon {
-        font-size: 3rem;
     }
 
     .result-title {
@@ -475,11 +435,21 @@ onMounted(async () => {
     }
 
     .stats-container {
-        gap: 1rem;
+        gap: 0.75rem;
     }
 
     .stat-value {
         font-size: 1.25rem;
+    }
+
+    .stat-divider {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .action-button {
+        transition: none;
     }
 }
 </style>
